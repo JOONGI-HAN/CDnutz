@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+
+@layer base {
+  html, body, #root {
+    height    : 100%;
+    width     : 100%;
+    font-size : 16px;
+  }
+}
+
+
+@theme breakpoints {
+  --breakpoint-xsm : 480px
+}
+
+@theme {
+  --animate-loading: loading 0.75s ease infinite;
+}
+
+@keyframes loading {
+  from {
+    transform : rotate(0deg);
+  }
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+
+:root {
+  --nav-height  : 64px;
+  --side-width  : 256px;
+
+
+  --primary-background           : #0D101B;
+  --secondary-background         : #0D1220;
+  --color-primary                : #94A3B8;
+  --color-secondary              : #64748B;
+  --accent-color                 : linear-gradient(to right, #7C3AED, #A855F7);
+  --accent-bright                : #B587FF;
+  --border                       : #2D3548;
+  --interractive-background      : #1A1F2E;
+  --dark-transparent-background  : #000000bf;
+
+
+  /* Text hierarchy */
+  --color-muted                  : #78716C;   /* stone-500 — labels, captions */
+  --color-subtle                 : #A8A29E;   /* stone-400 — secondary text  */
+  --color-text-soft              : #D6D3D1;   /* stone-300 — body text      */
+  --color-text-medium            : #E7E5E4;   /* stone-200 — slightly brighter */
+  --color-text-dim               : #57534E;   /* stone-600 — very muted */
+
+
+  /* Rating / score */
+  --color-rating                 : #FBBF24;   /* stars, scores */
+  --color-rating-bg              : #F59E0B;   /* genre badge base */
+  --color-rating-dim             : #FBBF2426; /* empty stars */
+
+
+  /* Trending badge */
+  --color-trending               : #FACC15;
+  --color-trending-bg            : #FACC1533;
+
+
+  /* Player status */
+  --color-status-want            : #F472B6;
+  --color-status-playing         : #60A5FA;
+  --color-status-played          : #4ADE80;
+
+
+  /* Surfaces */
+  --surface-card                 : #FFFFFF0D; /* white/5  — frosted card bg */
+  --surface-card-border          : #FFFFFF1A; /* white/10 — frosted card border */
+  --surface-card-hover           : #FFFFFF1A; /* white/10 — card hover bg */
+  --surface-card-border-hover    : #FFFFFF33; /* white/20 — card hover border */
+  --surface-overlay              : #00000099; /* black/60 — modal backdrop */
+  --surface-dark                 : #030712;   /* stone-950 / gray-950 */
+  --surface-dark-mid             : #1C1917;   /* stone-900 */
+  --surface-meta-row             : #FFFFFF0A; /* white/[0.04] — meta strip */
+
+
+  /* Hero / carousel */
+  --color-hero-dev-text          : #D1D5DB;   /* gray-300 — developer pill text */
+  --color-hero-dev-bg            : #3743554D; /* gray-700/30 — developer pill bg */
+  --color-hero-platform          : #9CA3AF;   /* gray-400 — platform list text */
+  --color-hero-hover-bg          : #E5E7EB;   /* gray-200 — CTA hover */
+
+
+  /* Sidebar */
+  --color-nav-active-shadow      : #A855F733; /* purple-500/20 — active item     */
+}
+
+
+.light {
+  --primary-background           : #F1F5F9;
+  --secondary-background         : #E2E8F0;
+  --color-primary                : #475569;
+  --color-secondary              : #94A3B8;
+  --accent-color                 : linear-gradient(to right, #7C3AED, #A855F7);
+  --accent-bright                : #7C3AED;
+  --border                       : #CBD5E1;
+  --interractive-background      : #E2E8F0;
+  --dark-transparent-background  : #FFFFFFBF;
+
+  --color-muted                  : #A8A29E;
+  --color-subtle                 : #78716C;
+  --color-text-soft              : #44403C;
+  --color-text-medium            : #292524;
+  --color-text-dim               : #A8A29E;
+
+  --color-rating                 : #D97706;
+  --color-rating-bg              : #B45309;
+  --color-rating-dim             : #D9770626;
+
+  --color-trending               : #CA8A04;
+  --color-trending-bg            : #CA8A0433;
+
+  --color-status-want            : #DB2777;
+  --color-status-playing         : #2563EB;
+  --color-status-played          : #16A34A;
+
+  --surface-card                 : #0000000D;
+  --surface-card-border          : #0000001A;
+  --surface-card-hover           : #0000001A;
+  --surface-card-border-hover    : #00000033;
+  --surface-overlay              : #FFFFFF99;
+  --surface-dark                 : #F8FAFC;
+  --surface-dark-mid             : #1C1917;
+}

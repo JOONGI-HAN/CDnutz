@@ -1,0 +1,1 @@
+"C:\Users\sahel\Downloads\Projects\CDnutz\env\Scripts\python.exe" "C:\Users\sahel\Downloads\Projects\CDnutz\backend\CDnutz_core\services\cron.py"

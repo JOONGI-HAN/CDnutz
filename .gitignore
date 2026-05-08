@@ -1,0 +1,17 @@
+logs/
+*.log
+npm-debug.log*
+
+node_modules/
+dist
+*.local
+
+__pycache__/
+*.pyc
+*.pyo
+
+.env
+.env.*
+!example.env
+
+venv/
