@@ -63,3 +63,8 @@ def gameDetails(request, id):
 
     except VideoGame.DoesNotExist:
         return Response({"error": "Game not found"}, status = 404)
+
+
+@api_view(['GET'])
+def guessGame(request, difficulty):
+    pass
