@@ -5,17 +5,19 @@ import logo from "../../assets/CDnav.png";
 import SearchBar   from "./duplicate/inputField.jsx";
 import LoginButton from "./duplicate/loginPromptButton.jsx";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import useWindowSizeListener from "../../hooks/useWindowSizeListener";
 
+import { Breakpoints }       from "../../enums.js";
 
-function Nav({ menuOpen, toggleMenu }) {
+
+function Nav({ toggleMenu }) {
 
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useWindowSizeListener({ size: 480, actionFN: setSearchExpanded, state: false })
+  useWindowSizeListener({ query: Breakpoints.XSM, actionFN: setSearchExpanded, matchState: false });
 
 
   return (

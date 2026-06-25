@@ -4,8 +4,27 @@
    redacted indicates we are in Guess The Game mode ==> add a redaction filter, and possibly alter the layout a little
 */
 
-function GameDescriptors({ data, variant = 'row', redacted = false }) {
-  const isCard = variant === 'card';
+import {GameDescriptorsVariants} from "../../../enums.js";
+
+function Field({ children, className = "", isCard }) {
+  if (isCard) {
+    return (
+      <div className = {`rounded-lg bg-[var(--surface-card)] border border-[var(--surface-card-border)] backdrop-blur-sm px-3 py-2 min-w-0 overflow-hidden ${className}`}>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <div className = {`flex items-baseline gap-2 min-w-0 ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+
+function GameDescriptors({ data, variant = GameDescriptorsVariants.ROW, redacted = false }) {
+  const isCard = variant === GameDescriptorsVariants.CARD;
 
   const wrapperClass = isCard
     ? "flex flex-col gap-3 w-full min-w-0"
@@ -43,20 +62,12 @@ function GameDescriptors({ data, variant = 'row', redacted = false }) {
     rounded px-1.5 py-0.5
   `;
 
-  const Field = ({ children, className = "" }) => isCard
-  ? <div className = {`rounded-lg bg-[var(--surface-card)] border border-[var(--surface-card-border)]
-                       backdrop-blur-sm px-3 py-2 min-w-0 overflow-hidden ${className}`}
-    >
-      {children}
-    </div>
-    : <div className = {`flex items-baseline gap-2 min-w-0 ${className}`}>{children}</div>;
-
   return (
     <div className = {wrapperClass}>
 
       {/* On smaller screens: display back to the right of the cover inline */}
       {redacted && (data.game_type || data.release_date) && (
-        <Field className = "sm:hidden">
+        <Field isCard = {isCard} className = "sm:hidden">
           <div className = "flex items-center gap-1.5 text-xs uppercase tracking-widest text-[var(--color-muted)]">
             {data.game_type && <span className = "font-medium text-[var(--color-text-medium)]">{data.game_type}</span>}
             {data.game_type && data.release_date && <span>•</span>}
@@ -67,7 +78,7 @@ function GameDescriptors({ data, variant = 'row', redacted = false }) {
 
       {/* Normal mode display (Only if not hidden by Guess The Game configurations) */}
       {!redacted && data.game_type && (
-        <Field>
+        <Field isCard = {isCard}>
           <p className = {labelClass}>Type</p>
           <p className = {typeValueClass}>{data.game_type}</p>
         </Field>
@@ -77,7 +88,7 @@ function GameDescriptors({ data, variant = 'row', redacted = false }) {
       {redacted && data.companies && (
         <>
           {data.companies.developers?.length > 0 && (
-            <Field>
+            <Field isCard = {isCard}>
               <p className = {labelClass}>Developers</p>
               <p className = {companyValueClass}>
                 {data.companies.developers.map(c => c.name).join(", ")}
@@ -85,7 +96,7 @@ function GameDescriptors({ data, variant = 'row', redacted = false }) {
             </Field>
           )}
           {data.companies.publishers?.length > 0 && (
-            <Field>
+            <Field isCard = {isCard}>
               <p className = {labelClass}>Publishers</p>
               <p className = {companyValueClass}>
                 {data.companies.publishers.map(c => c.name).join(", ")}
@@ -96,7 +107,7 @@ function GameDescriptors({ data, variant = 'row', redacted = false }) {
       )}
 
       {data.genres?.length > 0 && (
-        <Field>
+        <Field isCard = {isCard}>
           <p className = {`${labelClass} ${isCard ? 'mb-2' : ''}`}>Genres</p>
           <div className = "flex flex-wrap gap-1.5">
             {data.genres.map((genre, i) => (
@@ -109,7 +120,7 @@ function GameDescriptors({ data, variant = 'row', redacted = false }) {
       )}
 
       {data.releases?.length > 0 && (
-        <Field>
+        <Field isCard = {isCard}>
           <p className = {`${labelClass} ${isCard ? 'mb-2' : ''}`}>Platforms</p>
           <div className = "flex flex-wrap gap-1.5">
             {data.releases.map((release, i) => (
@@ -122,7 +133,7 @@ function GameDescriptors({ data, variant = 'row', redacted = false }) {
       )}
 
       {data.summary && (
-        <Field>
+        <Field isCard = {isCard}>
           <p className = {labelClass}>Overview</p>
 
           {Array.isArray(data.summary) ? (

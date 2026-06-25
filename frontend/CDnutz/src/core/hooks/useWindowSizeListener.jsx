@@ -1,16 +1,20 @@
 import { useEffect } from "react"
 
 
-function useWindowSizeListener({ size, actionFN, state }) {
+function useWindowSizeListener({ query, actionFN, matchState, unmatchState }) {
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= size) actionFN(false);
+    const mql = window.matchMedia(query);
+
+    const handler = (e) => {
+      if (e.matches) actionFN(matchState);
+      else if (unmatchState !== undefined) actionFN(unmatchState);
     };
 
-    window.addEventListener("resize", handleResize);
+    handler(mql);
 
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, [query, actionFN, matchState, unmatchState]);
 }
 
 export default useWindowSizeListener

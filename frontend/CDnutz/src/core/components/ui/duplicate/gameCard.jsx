@@ -1,12 +1,20 @@
 import GameCover from "./gameCover.jsx";
 import GameDescriptors from "./gameDescriptors.jsx";
 
-function GameCard({ data, coverLoading, standalone = false, redacted = false }) {
+import {GameDescriptorsVariants} from "../../../enums.js";
+
+function GameCard({ data, coverLoading, standalone = false, redacted = false, showDescriptors = false }) {
+
+    {/* GuessTheGame/Standalone mode descriptors always visible | In hero mode: descriptors only mounted when DetailsHero signals CARD layout */}
+    const showCardDescriptors = standalone || showDescriptors;
+
     return (
         <div className = {`grid gap-4 ${
             standalone
                 ? "grid-cols-1 sm:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(0,1fr)]"
-                : "grid-cols-1 md:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-1"
+                : showDescriptors 
+                    ? "grid-cols-[200px_minmax(0,1fr)]"
+                    : "grid-cols-1"
         }`}>
 
             {/* Game cover image + Sub-metadata in GuessTheGame mode */}
@@ -24,9 +32,11 @@ function GameCard({ data, coverLoading, standalone = false, redacted = false }) 
             </div>
 
             {/* Game Descriptors */}
-            <div className = {`min-w-0 ${standalone ? "flex" : "hidden md:flex xl:hidden"}`}>
-                <GameDescriptors data = {data} variant = "card" redacted = {redacted} />
-            </div>
+            {showCardDescriptors && (
+                <div className = "min-w-0 flex">
+                    <GameDescriptors data = {data} variant = {GameDescriptorsVariants.CARD} redacted = {redacted} />
+                </div>
+            )}
 
         </div>
     )

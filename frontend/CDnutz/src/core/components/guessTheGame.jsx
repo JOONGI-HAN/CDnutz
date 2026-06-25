@@ -35,7 +35,7 @@ export default function GuessTheGame() {
                 const gameData = await gameRes.json();
                 setData(gameData);
                 setLoading(false);
-            } catch (e) {
+            } catch {
                 setError(true);
                 setLoading(false);
                 return; // no need to fetch cover if game failed to return
@@ -60,7 +60,7 @@ export default function GuessTheGame() {
         e.preventDefault();
 
         const response = await fetch(
-            '/cdnutz/api/guess-the-game',
+            '/cdnutz/api/guess-the-game/',
             {
                 method  : "POST",
                 headers : {"Content-Type" : "application/json"},
@@ -75,7 +75,6 @@ export default function GuessTheGame() {
              setCover(result.payload.cover);
         }
         else setCover(result.payload); // user still has guesses left; we just update the cover
-        console.log(result);
     }
 
 

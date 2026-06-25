@@ -8,6 +8,7 @@ import { useParams } from "react-router";
 import { useEffect, useState } from "react";
 
 import useWindowSizeListener from "../hooks/useWindowSizeListener";
+import {Breakpoints} from "../enums.js";
 
 function GameDetails() {
 
@@ -49,7 +50,7 @@ function GameDetails() {
     [id]
   )
 
-  useWindowSizeListener({ size: 640, actionFN: setModalOpen, state: false })
+  useWindowSizeListener({ query: Breakpoints.SM, actionFN: setModalOpen, matchState: false });
 
   return (
     <div className = {`text-white ${(loading || error) && "flex items-center justify-center"}`}>
