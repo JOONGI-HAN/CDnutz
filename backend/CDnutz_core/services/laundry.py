@@ -50,6 +50,8 @@ class Cleaner:
             summary         = data.get("summary"),
             game_type       = data.get("game_type"),
             score           = score,
+            rating_count    = data.get("total_rating_count", 0),
+            hype            = data.get("hypes", 0),
             cover           = data.get("cover", {}).get("image_id"),
         ), data.get("parent_game")) # will need to resolve parent_game's PK upon saving to DB
 

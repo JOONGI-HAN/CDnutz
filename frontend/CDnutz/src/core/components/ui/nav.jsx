@@ -2,7 +2,7 @@ import { ArrowLeft, Menu, Moon } from "lucide-react";
 
 import logo from "../../assets/CDnav.png";
 
-import SearchBar   from "./duplicate/search.jsx";
+import SearchBar   from "./duplicate/inputField.jsx";
 import LoginButton from "./duplicate/loginPromptButton.jsx";
 
 import { useState, useEffect } from "react";
@@ -13,6 +13,7 @@ import useWindowSizeListener from "../../hooks/useWindowSizeListener";
 function Nav({ menuOpen, toggleMenu }) {
 
   const [searchExpanded, setSearchExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useWindowSizeListener({ size: 480, actionFN: setSearchExpanded, state: false })
 
@@ -38,7 +39,7 @@ function Nav({ menuOpen, toggleMenu }) {
           </div>
 
           <div className = "flex-1 flex items-center">
-            <SearchBar expanded = {searchExpanded} />
+            <SearchBar expanded = {searchExpanded} value = {searchQuery} onChange = {setSearchQuery} />
           </div>
 
         </>
@@ -64,8 +65,11 @@ function Nav({ menuOpen, toggleMenu }) {
 
           <div className = "flex-1 flex items-center justify-center max-xsm:justify-end">
             <SearchBar
-              expanded = {searchExpanded}
-              onExpand = {() => setSearchExpanded(true)}
+              value       = {searchQuery}
+              onChange    = {setSearchQuery}
+              expanded    = {searchExpanded}
+              onExpand    = {() => setSearchExpanded(true)}
+              collapsible = {true}
             />
           </div>
 

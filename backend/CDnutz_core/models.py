@@ -104,17 +104,19 @@ class Mode(models.Model):
 
 class VideoGame(models.Model):
 
-    igdb_id     = models.BigIntegerField(unique = True)  # Unique ID obtained from the api [used to preserve data intergrity upon DB sync]
-    title       = models.CharField(max_length = 255)
-    cover       = models.CharField(max_length = 255, null = True)
-    summary     = models.TextField(null = True)
-    score       = models.DecimalField(max_digits = 5, decimal_places = 2, null = True)
-    game_type   = models.IntegerField(choices = GameType.choices)
+    igdb_id      = models.BigIntegerField(unique = True)  # Unique ID obtained from the api [used to preserve data integrity upon DB sync]
+    title        = models.CharField(max_length = 255)
+    cover        = models.CharField(max_length = 255, null = True)
+    summary      = models.TextField(null = True)
+    score        = models.DecimalField(max_digits = 5, decimal_places = 2, null = True)
+    rating_count = models.IntegerField(default = 0)
+    hype         = models.IntegerField(default = 0)
+    game_type    = models.IntegerField(choices = GameType.choices)
 
-    genres      = models.ManyToManyField(Genre, related_name = "games")
-    modes       = models.ManyToManyField(Mode, related_name = "games")
+    genres       = models.ManyToManyField(Genre, related_name = "games")
+    modes        = models.ManyToManyField(Mode, related_name = "games")
 
-    parent_game = models.ForeignKey(
+    parent_game  = models.ForeignKey(
         "self",
         null         = True,
         on_delete    = models.SET_NULL,

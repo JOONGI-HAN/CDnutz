@@ -26,7 +26,7 @@ function Hero({ data, loading, error }) {
   }, [activeIndex])
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || data.length === 0) return;
 
     const heroInterval = setInterval(() => {
       progressRef.current += 1;
@@ -38,7 +38,7 @@ function Hero({ data, loading, error }) {
     }, progressIncrement);
 
     return () => clearInterval(heroInterval);
-  }, [paused])
+  }, [paused, data.length])
 
 
   return (
@@ -56,7 +56,6 @@ function Hero({ data, loading, error }) {
           <img
             src       = {item.cover}
             alt       = "trending now"
-            loading   = "lazy"
             className = "w-full h-full object-cover"
           />
 

@@ -1,25 +1,25 @@
 from rest_framework import serializers
-from .enums import PopularityType, MediaType, ArtworkType
+from .enums import MediaType, ArtworkType
 from .models import (VideoGame, Genre, Mode, AgeRatingCategory, AgeRatingOrganization,
     Platform, Region, Company, Language, GameCompany, GameRelease, GameLanguage,
-    AgeRating, MediaContent,
+    AgeRating
 )
 import re
 
 
 class DashboardSerializer(serializers.ModelSerializer):
-    cover = serializers.SerializerMethodField()
+    cover      = serializers.SerializerMethodField()
     developers = serializers.SerializerMethodField()
-    platforms = serializers.SerializerMethodField()
+    platforms  = serializers.SerializerMethodField()
 
     def get_cover(self, obj):
         priority_map = {
-            (MediaType.ARTWORK, ArtworkType.KEY_ART_NO_LOGO) : 1,
-            (MediaType.ARTWORK, ArtworkType.ARTWORK)         : 2,
-            (MediaType.SCREENSHOT, None)                     : 3,
+            (MediaType.ARTWORK,    ArtworkType.KEY_ART_NO_LOGO) : 1,
+            (MediaType.ARTWORK,    ArtworkType.ARTWORK)          : 2,
+            (MediaType.SCREENSHOT, None)                         : 3,
         }
 
-        chosen = None
+        chosen          = None
         chosen_priority = float('inf')
 
         for m in obj.media.all():
@@ -27,7 +27,7 @@ class DashboardSerializer(serializers.ModelSerializer):
             if key in priority_map:
                 p = priority_map[key]
                 if p < chosen_priority:
-                    chosen = m
+                    chosen          = m
                     chosen_priority = p
                     if p == 1:
                         break
@@ -38,34 +38,34 @@ class DashboardSerializer(serializers.ModelSerializer):
         return [gc.company.name for gc in obj.game_companies.all()]
 
     def get_platforms(self, obj):
-        return {gr.platform.name for gr in obj.game_releases.all()} # deduplicate platform names
+        return {gr.platform.name for gr in obj.game_releases.all()}
 
     class Meta:
-        model = VideoGame
+        model  = VideoGame
         fields = ["id", "title", "cover", "developers", "platforms"]
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Genre
+        model  = Genre
         fields = ["id", "name"]
 
 
 class ModeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Mode
+        model  = Mode
         fields = ["id", "name"]
 
 
 class AgeRatingOrgSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AgeRatingOrganization
+        model  = AgeRatingOrganization
         fields = ["id", "name"]
 
 
 class AgeRatingCatSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AgeRatingCategory
+        model  = AgeRatingCategory
         fields = ["id", "name"]
 
 
@@ -74,19 +74,19 @@ class AgeRatingSerializer(serializers.ModelSerializer):
     age_rating_cat = AgeRatingCatSerializer()
 
     class Meta:
-        model = AgeRating
+        model  = AgeRating
         fields = ["id", "age_rating_org", "age_rating_cat", "cover"]
 
 
 class PlatformSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Platform
+        model  = Platform
         fields = ["id", "name"]
 
 
 class RegionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Region
+        model  = Region
         fields = ["id", "name"]
 
 
@@ -96,54 +96,99 @@ class ReleaseSerializer(serializers.ModelSerializer):
     date     = serializers.ReadOnlyField(source = 'formatted_release_date')
 
     class Meta:
-        model = GameRelease
+        model  = GameRelease
         fields = ["id", "platform", "region", "date"]
 
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Company
+        model  = Company
         fields = ["id", "name", "website"]
 
 
 class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Language
+        model  = Language
         fields = ["id", "name"]
 
 
-class GameCompaniesSerializer(serializers.ModelSerializer):
-    company = CompanySerializer()
-
-    class Meta:
-        model = GameCompany
-        fields = ["id", "company", "developer", "publisher"]
-
-
-class GameLanguagesSerializer(serializers.ModelSerializer):
-    language = LanguageSerializer()
-
-    class Meta:
-        model = GameLanguage
-        fields = ["id", "language", "audio", "subtitle", "interface"]
-
-
 class VideoGameDetailsSerializer(serializers.ModelSerializer):
-    genres         = GenreSerializer(many = True)
-    modes          = ModeSerializer(many = True)
-    age_ratings    = AgeRatingSerializer(many = True)
-    game_releases  = ReleaseSerializer(many = True)
-    game_companies = GameCompaniesSerializer(many = True)
-    game_languages = GameLanguagesSerializer(many = True)
+    genres        = GenreSerializer(many     = True)
+    modes         = ModeSerializer(many      = True)
+    age_ratings   = AgeRatingSerializer(many = True)
+    releases = ReleaseSerializer(source      = 'game_releases', many = True)
 
-    release_date   = serializers.SerializerMethodField()
-    cover          = serializers.SerializerMethodField()
-    wallpaper      = serializers.SerializerMethodField()
-    trailer        = serializers.SerializerMethodField()
-    media          = serializers.SerializerMethodField()
+    release_date  = serializers.SerializerMethodField()
+    cover         = serializers.SerializerMethodField()
+    wallpaper     = serializers.SerializerMethodField()
+    trailer       = serializers.SerializerMethodField()
+    media         = serializers.SerializerMethodField()
+    companies     = serializers.SerializerMethodField()
+    languages     = serializers.SerializerMethodField()
 
-    game_type = serializers.CharField(source='get_game_type_display')
+    game_type     = serializers.CharField(source = 'get_game_type_display')
 
+    _logo_types = {
+        ArtworkType.GAME_LOGO_WHITE,
+        ArtworkType.GAME_LOGO_BLACK,
+        ArtworkType.GAME_LOGO_COLOR,
+    }
+
+    _key_art_types = {
+        ArtworkType.KEY_ART_NO_LOGO,
+        ArtworkType.KEY_ART_WITH_LOGO,
+    }
+
+    def _partition_media(self, obj):
+        cache_key = f'_media_{obj.pk}'
+        if hasattr(self, cache_key):
+            return getattr(self, cache_key)
+
+        screenshots    = []
+        artworks       = []
+        logos          = []
+        key_arts       = []
+        videos         = []
+        wallpaper      = None
+        trailer        = None
+        fallback_video = None
+
+        for m in obj.media.all():
+            if m.media_type == MediaType.SCREENSHOT:
+                screenshots.append({"id": m.id, "url": m.url})
+
+            elif m.media_type == MediaType.ARTWORK:
+                item = {"id": m.id, "title": m.title, "url": m.url}
+                if m.artwork_type in self._logo_types:
+                    logos.append(item)
+                elif m.artwork_type in self._key_art_types:
+                    key_arts.append(item)
+                    if wallpaper is None and m.artwork_type == ArtworkType.KEY_ART_NO_LOGO and not m.animated:
+                        wallpaper = {"id": m.id, "url": m.url}
+                else:
+                    artworks.append(item)
+
+            elif m.media_type == MediaType.VIDEO:
+                videos.append({"id": m.id, "title": m.title, "url": m.url})
+                if trailer is None and m.title and re.search(r"trailer", m.title, re.IGNORECASE):
+                    trailer = m.url
+                if fallback_video is None:
+                    fallback_video = m.url
+
+        result = {
+            "wallpaper" : wallpaper,
+            "trailer"   : trailer or fallback_video,
+            "media"     : {
+                "screenshots" : screenshots,
+                "artworks"    : artworks,
+                "logos"       : logos,
+                "key_arts"    : key_arts,
+                "videos"      : videos,
+            },
+        }
+
+        setattr(self, cache_key, result)
+        return result
 
     def get_release_date(self, obj):
         dates = [d.formatted_release_date for d in obj.game_releases.all() if d.formatted_release_date]
@@ -153,82 +198,77 @@ class VideoGameDetailsSerializer(serializers.ModelSerializer):
         return obj.url
 
     def get_wallpaper(self, obj):
-        media = next(
-            (
-                m for m in obj.media.all()
-                if m.media_type == MediaType.ARTWORK
-                and m.artwork_type == ArtworkType.KEY_ART_NO_LOGO
-                and not m.animated
-            ),
-            None,
-        )
-
-        if not media:
-            return None
-
-        return {
-            "id": media.id,
-            "url": media.url,
-        }
+        return self._partition_media(obj)["wallpaper"]
 
     def get_trailer(self, obj):
-        videos = [m for m in obj.media.all() if m.media_type == MediaType.VIDEO]
-        chosen_video = None
-
-        for v in videos:
-            if v.title:
-                match = re.search(r"trailer", v.title, re.IGNORECASE)
-                if match:
-                    return v.url
-            if not chosen_video:
-                chosen_video = v.url
-        if chosen_video:
-            return chosen_video
-        return None
-
+        return self._partition_media(obj)["trailer"]
 
     def get_media(self, obj):
-        media_data = {
-            "screenshots": [],
-            "artworks": [],
-            "logos": [],
-            "key_arts": [],
-            "videos": [],
+        return self._partition_media(obj)["media"]
+
+    def get_companies(self, obj):
+        companies = {
+            "developers" : [],
+            "publishers" : [],
         }
+        for gc in obj.game_companies.all():
+            if gc.developer:
+                companies["developers"].append({"id": gc.company.id, "name": gc.company.name, "website": gc.company.website})
+            if gc.publisher:
+                companies["publishers"].append({"id": gc.company.id, "name": gc.company.name, "website": gc.company.website})
+        return companies
 
-        logo_types = {
-            ArtworkType.GAME_LOGO_WHITE,
-            ArtworkType.GAME_LOGO_BLACK,
-            ArtworkType.GAME_LOGO_COLOR,
+    def get_languages(self, obj):
+        languages = {
+            "audio"     : [],
+            "subtitle"  : [],
+            "interface" : [],
         }
-
-        key_art_types = {
-            ArtworkType.KEY_ART_NO_LOGO,
-            ArtworkType.KEY_ART_WITH_LOGO,
-        }
-
-        for m in obj.media.all():
-            if m.media_type == MediaType.SCREENSHOT:
-                media_data["screenshots"].append({"id": m.id, "url": m.url})
-
-            elif m.media_type == MediaType.ARTWORK:
-                item = {"id": m.id, "title": m.title, "url": m.url}
-                if m.artwork_type in logo_types:
-                    media_data["logos"].append(item)
-                elif m.artwork_type in key_art_types:
-                    media_data["key_arts"].append(item)
-                else:
-                    media_data["artworks"].append(item)
-
-            elif m.media_type == MediaType.VIDEO:
-                media_data["videos"].append({"id": m.id, "title": m.title, "url": m.url})
-
-        return media_data
+        for gl in obj.game_languages.all():
+            lang = {"id": gl.language.id, "name": gl.language.name}
+            if gl.audio:
+                languages["audio"].append(lang)
+            if gl.subtitle:
+                languages["subtitle"].append(lang)
+            if gl.interface:
+                languages["interface"].append(lang)
+        return languages
 
     class Meta:
-        model = VideoGame
+        model  = VideoGame
         fields = [
             "id", "title", "cover", "wallpaper", "trailer", "summary", "release_date", "game_type",
-            "score", "genres", "modes", "age_ratings", "game_releases", "game_languages",
-            "game_companies", "media",
+            "score", "genres", "modes", "age_ratings", "releases", "languages",
+            "companies", "media",
         ]
+
+
+class GuessTheGameSerializer(serializers.ModelSerializer):
+    genres        = GenreSerializer(many     = True)
+    release_date  = serializers.SerializerMethodField()
+    companies     = serializers.SerializerMethodField()
+    cover         = serializers.SerializerMethodField()
+    game_type     = serializers.CharField(source = 'get_game_type_display')
+
+    def get_cover(self, obj):
+        return obj.url
+
+    def get_release_date(self, obj):
+        dates = [d.formatted_release_date for d in obj.game_releases.all() if d.formatted_release_date]
+        return min(dates) if dates else None
+
+    def get_companies(self, obj):
+        companies = {
+            "developers" : [],
+            "publishers" : [],
+        }
+        for gc in obj.game_companies.all():
+            if gc.developer:
+                companies["developers"].append({"id": gc.company.id, "name": gc.company.name, "website": gc.company.website})
+            if gc.publisher:
+                companies["publishers"].append({"id": gc.company.id, "name": gc.company.name, "website": gc.company.website})
+        return companies
+
+    class Meta:
+        model  = VideoGame
+        fields = ["id", "title", "cover", "summary", "release_date", "game_type", "genres", "companies"]

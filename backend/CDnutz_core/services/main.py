@@ -1,5 +1,6 @@
 import bootstrap  # Django injection
 from traffic import TrafficPolice
+import map
 
 
 class Gate:
@@ -23,7 +24,7 @@ class Gate:
     def _sync_games(self, updated_after, log_interval):
 
         game_query = """
-            fields name, summary, total_rating, cover.image_id, game_type, bundles, genres.name, release_dates.human,
+            fields name, summary, total_rating, total_rating_count, hypes, cover.image_id, game_type, bundles, genres.name, release_dates.human,
             release_dates.platform.name, release_dates.release_region.region, age_ratings.rating_category.rating,
             age_ratings.organization.name, screenshots.image_id, screenshots.animated, artworks.image_id, artworks.artwork_type,
             artworks.animated, videos.video_id, videos.name, involved_companies.company.name,
@@ -56,3 +57,5 @@ if __name__ == "__main__":
 
     entry = Gate()
     entry.run()
+
+    map.ageRatingCoverMap()

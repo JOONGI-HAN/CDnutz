@@ -4,6 +4,7 @@ import StarRating      from './duplicate/starRating';
 import StatusButton    from './duplicate/gamePlayerCount';
 import ActionButton    from './duplicate/gameDetailsActions';
 import GameDescriptors from './duplicate/gameDescriptors';
+import GameCard        from './duplicate/gameCard';
 
 function DetailsHero({ data }) {
   return (
@@ -26,50 +27,52 @@ function DetailsHero({ data }) {
                 </span>
               )}
             </div>
-            <div className = "w-[50%] flex flex-wrap gap-x-3 gap-y-1 mb-6">
-              {data.game_companies.map((item) => (
-                <span
-                  key       = {item.id}
-                  className = {`text-[0.7rem] uppercase tracking-widest border-b pb-px ${
-                    item.developer
-                      ? "text-[var(--color-rating)] border-[var(--color-rating-bg)]/50"
-                      : "text-white/70 border-white/20"
-                  }`}
-                >
-                  {item.company.name}
-                </span>
-              ))}
+
+            <div className="w-[50%] flex flex-wrap gap-x-3 gap-y-1 mb-6">
+              {(() => {
+                const seen   = new Set()
+                const pubIds = new Set(data.companies.publishers.map((c) => c.id))
+
+                return (
+                  <>
+                    {data.companies.developers.map((company) => {
+                      seen.add(company.id)
+                      const isAlso = pubIds.has(company.id)
+                      return (
+                        <span
+                          key       = {company.id}
+                          className = {`text-[0.7rem] uppercase tracking-widest pb-px ${
+                          isAlso
+                            ? "inline-block text-white/70 border-b border-[var(--color-rating)]" +
+                              " after:block after:h-px after:bg-white/20"
+                            : "text-[var(--color-rating)] border-b border-[var(--color-rating)]"
+                          }`}
+                        >
+                          {company.name}
+                        </span>
+                      )
+                    })}
+
+                    {data.companies.publishers.map((company) => {
+                      if (seen.has(company.id)) return null
+                      return (
+                        <span
+                          key       = {company.id}
+                          className = "text-[0.7rem] uppercase tracking-widest border-b pb-px
+                                       text-white/70 border-white/20"
+                        >
+                          {company.name}
+                        </span>
+                      )
+                    })}
+                  </>
+                )
+              })()}
             </div>
 
             <div className = "grid xl:grid-cols-[250px_minmax(0,500px)_minmax(max-content,auto)] gap-6">
 
-              <div className = "grid grid-cols-1 md:grid-cols-[200px_1fr] xl:grid-cols-1 gap-4">
-
-                {/* Game cover image */}
-                <div className = "w-full max-w-[200px] xl:max-w-none rounded-lg aspect-[3/4]
-                                  overflow-hidden border border-[var(--border)] shadow-2xl
-                                  bg-[var(--surface-dark-mid)] flex-shrink-0">
-                  {data.cover ? (
-                    <img
-                      src       = {data.cover}
-                      alt       = {data.title}
-                      loading   = "lazy"
-                      className = "w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className = "w-full h-full flex items-center justify-center
-                                      text-[var(--color-text-dim)] text-3xl">
-                      ?
-                    </div>
-                  )}
-                </div>
-
-                {/* Game Descriptors — visible md to xl only */}
-                <div className = "hidden md:flex xl:hidden">
-                  <GameDescriptors data = {data} variant = "card" />
-                </div>
-
-              </div>
+              <GameCard data = { data } />
 
               {/* Trailer video */}
               <div className = "w-full max-w-2xl mx-auto rounded-xl overflow-hidden

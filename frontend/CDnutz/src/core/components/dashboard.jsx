@@ -12,7 +12,7 @@ function Dashboard() {
 
   useEffect(() => {
 
-    fetch("/cdnutz/api/dashboard/")
+    fetch("/cdnutz/api/dashboard")
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error ${res.status}`);
         return res.json();

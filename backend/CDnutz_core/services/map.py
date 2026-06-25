@@ -18,9 +18,3 @@ def ageRatingCoverMap():
         paths,
         ["cover"]
     )
-
-
-
-
-if __name__ == '__main__':
-    ageRatingCoverMap()

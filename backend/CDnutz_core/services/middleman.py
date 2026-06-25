@@ -270,7 +270,7 @@ class Middleman:
     def upsert_base_entities(self, e):
 
         self._bulk_upsert(VideoGame, e["games"],
-            ["title", "cover", "summary", "score", "game_type"])
+            ["title", "cover", "summary", "score", "rating_count", "hype", "game_type"])
 
         self._bulk_upsert(Franchise, e["franchises"].values(), ["name"])
         self._bulk_upsert(Genre, e["genres"].values(), ["name"])
