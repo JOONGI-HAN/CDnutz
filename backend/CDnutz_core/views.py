@@ -87,7 +87,7 @@ def guessGame(request) -> Response:
         }
 
         if difficulty not in difficulty_criteria:
-            return Response({"difficulty": "Invalid difficulty"}, status=404)
+            return Response({"difficulty": "Invalid difficulty"}, status = 404)
 
         main_qs = (
             VideoGame.objects
@@ -104,7 +104,7 @@ def guessGame(request) -> Response:
 
         count = main_qs.count()  # we could default to doing Model.objects.order_by('?').first() but our model is too big --> slow
         if count == 0:
-            return Response({"status": "Error"}, status=404)
+            return Response({"status": "Error"}, status = 404)
 
         idx = random.randint(0, count - 1)
         main_game = main_qs[idx]
@@ -115,10 +115,10 @@ def guessGame(request) -> Response:
                                      "1"]:  # if user wants dlcs too, we draw dlcs related to main game we pulled only
             addons = list(
                 main_game.addons
-                .filter(game_type=GameType.DLC)
+                .filter(game_type = GameType.DLC)
                 .prefetch_related(
-                    Prefetch("game_companies", queryset=GameCompany.objects.select_related("company")),
-                    Prefetch("game_releases", queryset=GameRelease.objects.select_related("platform", "region")),
+                    Prefetch("game_companies", queryset = GameCompany.objects.select_related("company")),
+                    Prefetch("game_releases", queryset  = GameRelease.objects.select_related("platform", "region")),
                     "genres"
                 )
             )
@@ -152,48 +152,89 @@ def guessGame(request) -> Response:
             full_game_data,
             revealed_indices,
             summary_parts,
-            cover=None  # front end will handle a placeholder separately
+            cover = None  # front end will handle a placeholder separately
         ))
 
     else:
         state          = request.session.get('gtg_state')
         full_game_data = state.get("full_data")
-        user_guess     = json.loads(request.body).get("guess", "")
+        body           = json.loads(request.body)
 
-        state["guesses_made"]        = state.get("guesses_made", 0) + 1
-        request.session["gtg_state"] = state
-        request.session.modified = True  # for some reason without this; the session doesn't update properly
+        if "category" in body:
+            category   = body["category"]
+            index      = body["index"]
 
-        correct = re.sub(r'[^a-zA-Z0-9\s]', '', user_guess).lower() == state.get(
-            "answer")
+            revealed   = state.get("revealed_fields")
 
-        if state.get('guesses_made') >= 3 or correct:
-            revealed_indices, summary_parts = _earlyReveal(state.get("difficulty"), full_game_data, game_over=True)
-            cover = _get_cover_bytes(state, game_over=True)
+            if state.get('hints_remaining', 0) <= 0:
+                return Response({"error": "No hints remaining"}, status = 400)
 
-            request.session['gtg_state'] = state  # persist cover cache set inside _get_cover_bytes **
+            full_list     = _resolve_by_path(full_game_data, category)
+            revealed_list = _resolve_by_path(revealed, category)
+
+            if index is not None:
+                target = index
+            else:
+                unrevealed = [i for i in range(len(full_list)) if i not in revealed_list]
+                if not unrevealed:
+                    return Response({"error": "Nothing left to reveal"}, status = 400)
+                target = random.choice(unrevealed)
+
+            if target not in revealed_list:
+                revealed_list.append(target)
+
+            state['hints_remaining']    -= 1
+            state['revealed_fields']     = revealed
+            request.session['gtg_state'] = state
             request.session.modified     = True
 
-            status = "OK" if correct else "KO"
+            summary_parts = state.get('revealed_summary', [])
 
             return Response({
-                "status": status,
-                "payload": _build_safe_payload(
+                "payload"         : _build_safe_payload(
                     full_game_data,
-                    revealed_indices,
+                    revealed,
                     summary_parts,
-                    cover,
-                    answer = state.get("answer")
                 )
             })
 
-        cover = _get_cover_bytes(state, game_over=False)
+        else:
+            user_guess = body.get("guess", "")
 
-        request.session['gtg_state'] = state  # persist cover cache set inside _get_cover_bytes
-        request.session.modified = True
+            state["guesses_made"]        = state.get("guesses_made", 0) + 1
+            request.session["gtg_state"] = state
+            request.session.modified     = True  # for some reason without this; the session doesn't update properly
 
-        return Response({"incorrect": "wrong guess!",
-                         "payload": cover}, status=200)
+            correct = re.sub(r'[^a-zA-Z0-9\s]', '', user_guess).lower() == state.get(
+                "answer")
+
+            if state.get('guesses_made') >= 3 or correct:
+                revealed_indices, summary_parts = _earlyReveal(state.get("difficulty"), full_game_data, game_over = True)
+                cover = _get_cover_bytes(state, game_over = True)
+
+                request.session['gtg_state'] = state  # persist cover cache set inside _get_cover_bytes **
+                request.session.modified     = True
+
+                game_over = True if correct else False
+
+                return Response({
+                    "over"    : game_over,
+                    "payload" : _build_safe_payload(
+                        full_game_data,
+                        revealed_indices,
+                        summary_parts,
+                        cover,
+                        answer = state.get("answer")
+                    )
+                })
+
+            cover = _get_cover_bytes(state, game_over = False)
+
+            request.session['gtg_state'] = state  # persist cover cache set inside _get_cover_bytes
+            request.session.modified     = True
+
+            return Response({"incorrect": "wrong guess!",
+                             "payload": cover}, status = 200)
 
 
 @api_view(['GET'])
@@ -201,7 +242,7 @@ def guessGameCover(request) -> Response:
     state = request.session.get('gtg_state')
 
     if not state:
-        return Response({"cover": None}, status=400)
+        return Response({"cover": None}, status = 400)
 
     cover = _get_cover_bytes(state)
     request.session['gtg_state'] = state
@@ -209,10 +250,8 @@ def guessGameCover(request) -> Response:
     return Response({"cover": cover})
 
 
-def _build_safe_payload(full_game_data, revealed_indices, summary_parts, cover, answer = None):
+def _build_safe_payload(full_game_data, revealed_indices, summary_parts, cover = None, answer = None):
     payload = {
-        "cover": cover,
-
         "game_type": full_game_data["game_type"],
 
         "release_date": revealed_indices["release_date"],
@@ -243,6 +282,9 @@ def _build_safe_payload(full_game_data, revealed_indices, summary_parts, cover, 
         }
     }
 
+    if cover:
+        payload["cover"] = cover
+
     if answer:
         payload["title"] = answer
 
@@ -261,7 +303,7 @@ def _get_cover_bytes(state, game_over=False):
             return None
 
         try:
-            resp = requests.get(utils.construct_igdb_url(cover_id), timeout=5)
+            resp = requests.get(utils.construct_igdb_url(cover_id), timeout = 5)
             resp.raise_for_status()
 
             cover_bytes = resp.content
@@ -442,7 +484,7 @@ def _pixelate_cover(img_bytes: bytes, guesses_made: int, game_over: bool = False
             out = small.resize(original_size, Image.NEAREST)
 
     buffer = BytesIO()
-    out.save(buffer, format="JPEG", quality=85)
+    out.save(buffer, format = "JPEG", quality = 85)
     return buffer.getvalue()
 
 
@@ -451,3 +493,9 @@ def _encode_b64(img_bytes: bytes | str) -> str:
         return img_bytes
 
     return base64.b64encode(img_bytes).decode("utf-8")
+
+
+def _resolve_by_path(obj, path):
+    for key in path:
+        obj = obj[key]
+    return obj

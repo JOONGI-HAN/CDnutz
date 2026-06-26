@@ -1,11 +1,12 @@
 
-function ActionButton({ icon: Icon, label }) {
+function ActionButton({ icon: Icon, label, onClick, type }) {
   return (
     <button
       className = "flex items-center gap-3 rounded-lg
                    bg-[var(--surface-card)] border border-[var(--surface-card-border)]
                    hover:bg-[var(--surface-card-hover)] hover:border-[var(--surface-card-border-hover)]
-                   transition-colors px-4 py-3 group"
+                   transition-colors px-4 py-3 group text-nowrap"
+      onClick = {onClick} type = {type}
     >
       {Icon &&
         <Icon

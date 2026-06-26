@@ -23,8 +23,14 @@ function Field({ children, className = "", isCard }) {
 }
 
 
-function GameDescriptors({ data, variant = GameDescriptorsVariants.ROW, redacted = false }) {
+function GameDescriptors({ data, hintRequest, variant = GameDescriptorsVariants.ROW, redacted = false }) {
   const isCard = variant === GameDescriptorsVariants.CARD;
+
+  const redactionClass = (isRevealed) => {
+    return isRevealed === false
+      ? "bg-black border-black text-transparent cursor-pointer select-none break-all rounded-sm"
+      : "";
+  };
 
   const wrapperClass = isCard
     ? "flex flex-col gap-3 w-full min-w-0"
@@ -62,10 +68,16 @@ function GameDescriptors({ data, variant = GameDescriptorsVariants.ROW, redacted
     rounded px-1.5 py-0.5
   `;
 
+  const handleHintClick = (category, index, isRevealed) => {
+    if (isRevealed === false) {
+      hintRequest(category, index);
+    }
+  };
+
   return (
     <div className = {wrapperClass}>
 
-      {/* On smaller screens: display back to the right of the cover inline */}
+      {/* On smaller screens, display vertically with the rest */}
       {redacted && (data.game_type || data.release_date) && (
         <Field isCard = {isCard} className = "sm:hidden">
           <div className = "flex items-center gap-1.5 text-xs uppercase tracking-widest text-[var(--color-muted)]">
@@ -76,9 +88,9 @@ function GameDescriptors({ data, variant = GameDescriptorsVariants.ROW, redacted
         </Field>
       )}
 
-      {/* Normal mode display (Only if not hidden by Guess The Game configurations) */}
-      {!redacted && data.game_type && (
-        <Field isCard = {isCard}>
+      {/* Normal mode display */}
+      {data.game_type && (
+        <Field isCard  = {isCard}>
           <p className = {labelClass}>Type</p>
           <p className = {typeValueClass}>{data.game_type}</p>
         </Field>
@@ -88,10 +100,17 @@ function GameDescriptors({ data, variant = GameDescriptorsVariants.ROW, redacted
       {redacted && data.companies && (
         <>
           {data.companies.developers?.length > 0 && (
-            <Field isCard = {isCard}>
+            <Field isCard  = {isCard}>
               <p className = {labelClass}>Developers</p>
               <p className = {companyValueClass}>
-                {data.companies.developers.map(c => c.name).join(", ")}
+                {data.companies.developers.map((c, i, arr) => (
+                    <span key = {i}>
+                      <span className = {redactionClass(c.revealed)} onClick = {() => {handleHintClick(["companies", "developers"], i, c.revealed)}}>
+                        {c.name}
+                      </span>
+                      {i < arr.length - 1 && ", "}
+                    </span>
+                ))}
               </p>
             </Field>
           )}
@@ -99,7 +118,14 @@ function GameDescriptors({ data, variant = GameDescriptorsVariants.ROW, redacted
             <Field isCard = {isCard}>
               <p className = {labelClass}>Publishers</p>
               <p className = {companyValueClass}>
-                {data.companies.publishers.map(c => c.name).join(", ")}
+                {data.companies.publishers.map((c, i, arr) => (
+                    <span key = {i}>
+                      <span className = {redactionClass(c.revealed)} onClick = {() => {handleHintClick(["companies", "publishers"], i, c.revealed)}}>
+                        {c.name}
+                      </span>
+                      {i < arr.length - 1 && ", "}
+                    </span>
+                ))}
               </p>
             </Field>
           )}
@@ -111,10 +137,10 @@ function GameDescriptors({ data, variant = GameDescriptorsVariants.ROW, redacted
           <p className = {`${labelClass} ${isCard ? 'mb-2' : ''}`}>Genres</p>
           <div className = "flex flex-wrap gap-1.5">
             {data.genres.map((genre, i) => (
-              <span key = {i} className = {genrePillClass}>
-                {genre.name}
-              </span>
-            ))}
+                    <span key = {i} className = {`${genrePillClass} ${redactionClass(genre.revealed)}`} onClick = {() => {handleHintClick("genres", i, genre.revealed)}}>
+                      {genre.name}
+                    </span>
+                ))}
           </div>
         </Field>
       )}
@@ -137,15 +163,17 @@ function GameDescriptors({ data, variant = GameDescriptorsVariants.ROW, redacted
           <p className = {labelClass}>Overview</p>
 
           {Array.isArray(data.summary) ? (
-            data.summary.map((chunk, index) => (
-              <p key = {index} className = {summaryValueClass}>
-                {chunk.text}
+              <p className = {summaryValueClass}>
+                {data.summary.map((chunk, index) => (
+                  <span key = {index} className = {redactionClass(chunk.revealed)} onClick = {() => {handleHintClick("summary", index, chunk.revealed)}}>
+                    {chunk.text}
+                  </span>
+                ))}
               </p>
-            ))
           ) : (
-            <p className = {summaryValueClass}>
-              {data.summary}
-            </p>
+              <p className = {`${summaryValueClass} ${redactionClass(data.summary.revealed)}`}>
+                {data.summary}
+              </p>
           )}
         </Field>
       )}
