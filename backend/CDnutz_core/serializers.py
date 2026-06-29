@@ -4,7 +4,20 @@ from .models import (VideoGame, Genre, Mode, AgeRatingCategory, AgeRatingOrganiz
     Platform, Region, Company, Language, GameCompany, GameRelease, GameLanguage,
     AgeRating
 )
+import CDnutz_core.utils as utils
+
 import re
+
+
+class VideoGameSerializer(serializers.ModelSerializer):
+    cover     = serializers.SerializerMethodField()
+    game_type = serializers.CharField(source = 'get_game_type_display')
+
+    def get_cover(self, obj):
+        return utils.construct_igdb_url(obj.cover, "cover_small")
+    class Meta:
+        model = VideoGame
+        fields = ["id", "title", "cover", "game_type"]
 
 
 class DashboardSerializer(serializers.ModelSerializer):
@@ -195,7 +208,7 @@ class VideoGameDetailsSerializer(serializers.ModelSerializer):
         return min(dates) if dates else None
 
     def get_cover(self, obj):
-        return obj.url
+        return utils.construct_igdb_url(obj.cover)
 
     def get_wallpaper(self, obj):
         return self._partition_media(obj)["wallpaper"]
@@ -251,7 +264,7 @@ class GuessTheGameSerializer(serializers.ModelSerializer):
     game_type     = serializers.CharField(source = 'get_game_type_display')
 
     def get_cover(self, obj):
-        return obj.url
+        return utils.construct_igdb_url(obj.cover)
 
     def get_release_date(self, obj):
         dates = [d.formatted_release_date for d in obj.game_releases.all() if d.formatted_release_date]

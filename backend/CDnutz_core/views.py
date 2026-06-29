@@ -3,7 +3,7 @@ from io import BytesIO
 from .models import (VideoGame, Company, Franchise,
                      GameCompany, GameRelease, GameLanguage, AgeRating,
                      MediaContent)
-from .serializers import DashboardSerializer, VideoGameDetailsSerializer, GuessTheGameSerializer
+from .serializers import VideoGameSerializer, DashboardSerializer, VideoGameDetailsSerializer, GuessTheGameSerializer
 from .enums import PopularityType, MediaType, ArtworkType, GameType
 import CDnutz_core.utils as utils
 
@@ -12,6 +12,8 @@ from rest_framework.response import Response
 
 from django.db.models import Prefetch
 from django.db.models import Q
+
+from django.contrib.postgres.search import TrigramSimilarity
 
 from datetime import datetime
 from PIL import Image
@@ -74,6 +76,25 @@ def gameDetails(request, id):
         return Response({"error": "Game not found"}, status = 404)
 
 
+@api_view(['GET'])
+def gameSearch(request):
+    query = request.GET.get("q")
+
+    if not query:
+        return Response({"error": "expected input, found nothing"}, status = 400)
+
+    video_games = (
+        VideoGame.objects
+        .annotate(similarity   = TrigramSimilarity("title", query))
+        .filter(similarity__gt = 0.6)
+        .order_by("-similarity")[:5]
+    )
+
+    serialized_video_game = VideoGameSerializer(video_games, many = True)
+
+    return Response(serialized_video_game.data, status = 200)
+
+
 @api_view(['GET', 'POST'])
 def guessGame(request) -> Response:
     if request.method == 'GET':
@@ -111,8 +132,7 @@ def guessGame(request) -> Response:
 
         choice = main_game
 
-        if dlcs and dlcs.lower() in ["true",
-                                     "1"]:  # if user wants dlcs too, we draw dlcs related to main game we pulled only
+        if dlcs and dlcs.lower() in ["true", "1"]:  # if user wants dlcs too, we draw dlcs related to main game we pulled only
             addons = list(
                 main_game.addons
                 .filter(game_type = GameType.DLC)
@@ -212,7 +232,7 @@ def guessGame(request) -> Response:
                 revealed_indices, summary_parts = _earlyReveal(state.get("difficulty"), full_game_data, game_over = True)
                 cover = _get_cover_bytes(state, game_over = True)
 
-                request.session['gtg_state'] = state  # persist cover cache set inside _get_cover_bytes **
+                request.session['gtg_state'] = state
                 request.session.modified     = True
 
                 game_over = True if correct else False

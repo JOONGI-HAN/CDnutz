@@ -7,6 +7,8 @@ import GuessBar from './ui/duplicate/inputField.jsx';
 import { useState, useEffect } from "react";
 import { useSearchParams } from 'react-router-dom';
 
+import useDebounce from "../hooks/useDebounce";
+
 
 export default function GuessTheGame() {
     const [data, setData]                         = useState({});
@@ -24,6 +26,9 @@ export default function GuessTheGame() {
     const dlcs = searchParams.get("dlcs");
 
     const [totalHints, setTotalHints] = useState(3);
+
+    {/* alias loading to isSearching to avoid naming conflicts */}
+    const { results, loading: isSearching } = useDebounce('/cdnutz/api/game/search/', userGuess);
 
     useEffect(() => {
         async function loadGame() {
@@ -84,8 +89,6 @@ export default function GuessTheGame() {
 
     async function obtainHint(elem, hintIdx) {
         const path= Array.isArray(elem) ? elem : [elem]
-        console.log(`user asked for ${hintIdx === undefined ? "random hint" : `${hintIdx} hint`} from the ${path} category`)
-        console.log("user asked for hint from category:", path);
 
         const response = await fetch(
             '/cdnutz/api/guess-the-game/',
@@ -164,7 +167,7 @@ export default function GuessTheGame() {
                     <form className = "flex gap-2 flex-col xsm:flex-row items-center justify-center flex-wrap"
                           onSubmit = {submitAnswer}>
                         <div className = "w-full xsm:w-[420px]">
-                            <GuessBar value = {userGuess} placeholder = {"Guess..."} onChange = {setUserGuess} showIcon = {false} />
+                            <GuessBar value = {userGuess} placeholder = {"Guess..."} onChange = {setUserGuess} showIcon = {false} results = {results} loading = {loading} />
                         </div>
                         <div className="flex gap-2 justify-center items-center">
                             <div className="relative flex flex-col items-center">

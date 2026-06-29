@@ -1,11 +1,11 @@
 import Spinner from "../duplicate/spinner";
 
-function GameCover({data, loading, redacted = false}) {
+function GameCover({data, loading, redacted = false, className = ""}) {
 
     return (
-        <div className = "w-full max-w-[200px] xl:max-w-none rounded-lg aspect-[3/4]
-                                  overflow-hidden border border-[var(--border)] shadow-2xl
-                                  bg-[var(--surface-dark-mid)] flex-shrink-0 flex items-center justify-center">
+        <div className = {`rounded-lg overflow-hidden border border-[var(--border)] shadow-2xl
+                           bg-[var(--surface-dark-mid)] flex-shrink-0 flex items-center justify-center
+                           ${className || "w-full max-w-[200px] xl:max-w-none aspect-[3/4]"}`}>
 
           {loading ?
             <Spinner />

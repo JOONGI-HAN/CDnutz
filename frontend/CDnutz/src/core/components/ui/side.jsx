@@ -2,28 +2,35 @@ import { HelpCircle, Heart, MessagesSquare, Users, Home, Star } from 'lucide-rea
 
 import LoginButton from './duplicate/loginPromptButton.jsx';
 
+import { NavLink } from "react-router-dom";
+import Nav from "./nav.jsx";
+
 
 const menuItems = {
   "Menu"     : [
 
     { "icon"   : Home,
       "label"  : "Homepage",
-      "active" : true
+      "active" : true,
+      "link"   : "/"
     },
 
     { "icon"   : Users,
       "label"  : "Discover Friends",
-      "active" : false
+      "active" : false,
+      "link"   : "/"
     },
 
     { "icon"   : MessagesSquare,
       "label"  : "Community Forums",
-      "active" : false
+      "active" : false,
+      "link"   : "/"
     },
 
     { "icon"   : HelpCircle,
       "label"  : "Guess the Game",
-      "active" : false
+      "active" : false,
+      "link"   : "/guess-the-game?difficulty=easy&dlcs=0"
     },
   ],
 
@@ -31,12 +38,14 @@ const menuItems = {
 
     { "icon"   : Star,
       "label"  : "Favorites",
-      "active" : false
+      "active" : false,
+      "link"   : "/"
     },
 
     { "icon"   : Heart,
       "label"  : "Wishlist",
       "active" : false,
+      "link"   : "/"
     }
   ]
 };
@@ -74,17 +83,15 @@ function Side({ menuOpen, menuClose }) {
               <ul className = "flex flex-col gap-1">
                 {items.map((item) => (
                   <li key = {item.label}>
-                    <a
-                      href      = "#"
-                      className = {`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all whitespace-nowrap
-                                    ${item.active
-                                      ? "bg-[image:var(--accent-color)] text-white shadow-lg shadow-[var(--color-nav-active-shadow)]"
-                                      : "text-[var(--color-primary)] hover:text-white hover:bg-[var(--interractive-background)]"
-                                    }`}
+                    <NavLink to = {item.link} className = {`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all whitespace-nowrap
+                                                          ${item.active
+                                                            ? "bg-[image:var(--accent-color)] text-white shadow-lg shadow-[var(--color-nav-active-shadow)]"
+                                                            : "text-[var(--color-primary)] hover:text-white hover:bg-[var(--interractive-background)]"
+                                                          }`}
                     >
                       <item.icon className = "w-5 h-5 shrink-0" />
                       <span>{item.label}</span>
-                    </a>
+                    </NavLink>
                   </li>
                 ))}
               </ul>

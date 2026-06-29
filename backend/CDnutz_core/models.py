@@ -160,10 +160,6 @@ class VideoGame(models.Model):
         related_name = "games"
     )
 
-    @property
-    def url(self):
-        return construct_igdb_url(self.cover)
-
     class Meta:
         ordering = ["title"]
 

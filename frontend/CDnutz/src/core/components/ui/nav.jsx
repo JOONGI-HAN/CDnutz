@@ -8,6 +8,7 @@ import LoginButton from "./duplicate/loginPromptButton.jsx";
 import { useState } from "react";
 
 import useWindowSizeListener from "../../hooks/useWindowSizeListener";
+import useDebounce from "../../hooks/useDebounce";
 
 import { Breakpoints }       from "../../enums.js";
 
@@ -16,6 +17,8 @@ function Nav({ toggleMenu }) {
 
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { results, loading } = useDebounce('/cdnutz/api/game/search/', searchQuery);
 
   useWindowSizeListener({ query: Breakpoints.XSM, actionFN: setSearchExpanded, matchState: false });
 
@@ -41,7 +44,7 @@ function Nav({ toggleMenu }) {
           </div>
 
           <div className = "flex-1 flex items-center">
-            <SearchBar expanded = {searchExpanded} value = {searchQuery} onChange = {setSearchQuery} />
+            <SearchBar expanded = {searchExpanded} value = {searchQuery} onChange = {setSearchQuery} results = {results} loading = {loading} />
           </div>
 
         </>
@@ -72,6 +75,8 @@ function Nav({ toggleMenu }) {
               expanded    = {searchExpanded}
               onExpand    = {() => setSearchExpanded(true)}
               collapsible = {true}
+              results     = {results}
+              loading     = {loading}
             />
           </div>
 
