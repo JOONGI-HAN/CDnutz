@@ -4,7 +4,7 @@ import GameCard from './ui/duplicate/gameCard';
 import ActionButton from './ui/duplicate/gameDetailsActions';
 import GuessBar from './ui/duplicate/inputField.jsx';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from 'react-router-dom';
 
 import useDebounce from "../hooks/useDebounce";
@@ -25,10 +25,15 @@ export default function GuessTheGame() {
     const difficulty = searchParams.get("difficulty");
     const dlcs = searchParams.get("dlcs");
 
+    const [isFetchingHint, setIsFetchingHint] = useState(false);
+    const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+
     const [totalHints, setTotalHints] = useState(3);
 
-    {/* alias loading to isSearching to avoid naming conflicts */}
-    const { results, loading: isSearching } = useDebounce('/cdnutz/api/game/search/', userGuess);
+    const { results, _ } = useDebounce('/cdnutz/api/game/search/', userGuess);
+
+    const gameOver = useRef(false);
+
 
     useEffect(() => {
         async function loadGame() {
@@ -43,8 +48,8 @@ export default function GuessTheGame() {
                 setData(gameData);
                 setLoading(false);
             } catch {
-                setError(true);
                 setLoading(false);
+                setError(true)
                 return; // no need to fetch cover if game failed to return
             }
 
@@ -66,6 +71,9 @@ export default function GuessTheGame() {
     async function submitAnswer(e) {
         e.preventDefault();
 
+        if (isSubmittingAnswer) return
+
+        setIsSubmittingAnswer(true);
         const response = await fetch(
             '/cdnutz/api/guess-the-game/',
             {
@@ -81,16 +89,27 @@ export default function GuessTheGame() {
         if (result.over === true || result.over === false) {
              setData(result.payload);
              setCover(result.payload.cover);
+             setIsSubmittingAnswer(false);
+
+             gameOver.current = true
         }
-        else setCover(result.payload); // user still has guesses left; we just update the cover
+        else { // user still has guesses left; we just update the cover
+            setCover(result.payload);
+            setIsSubmittingAnswer(false);
+        }
 
         setUserGuess("")
     }
 
     async function obtainHint(elem, hintIdx) {
+        if (totalHints <= 0 || isFetchingHint) return
+
         const path= Array.isArray(elem) ? elem : [elem]
 
-        const response = await fetch(
+        setIsFetchingHint(true)
+
+        try {
+            const response = await fetch(
             '/cdnutz/api/guess-the-game/',
             {
                 method  : "POST",
@@ -99,18 +118,26 @@ export default function GuessTheGame() {
                     category : path,
                     index    : hintIdx === undefined ? null : hintIdx
                 })
+                }
+            )
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setData(result.payload);
+                setTotalHints((prev) => prev - 1)
             }
-        )
-
-        const result = await response.json();
-
-        if (response.ok) {
-            setData(result.payload);
-            setTotalHints((prev) => prev - 1)
+        } catch (e) {
+            console.log(`Failed to fetch hint ${e}`)
+        } finally {
+            setIsFetchingHint(false)
         }
+
     }
 
     const handleRandomHint = () => {
+        if (totalHints <= 0 || isFetchingHint || gameOver.current) return;
+
         let unrevealedPool = []
 
         Object.entries(data)
@@ -121,6 +148,9 @@ export default function GuessTheGame() {
         })
 
         const randomHint = unrevealedPool.flat()[Math.floor(Math.random() * unrevealedPool.flat().length)]
+
+        console.log(randomHint)
+
         obtainHint(randomHint[0])
     }
 
@@ -169,16 +199,16 @@ export default function GuessTheGame() {
                         <div className = "w-full xsm:w-[420px]">
                             <GuessBar value = {userGuess} placeholder = {"Guess..."} onChange = {setUserGuess} showIcon = {false} results = {results} loading = {loading} />
                         </div>
-                        <div className="flex gap-2 justify-center items-center">
-                            <div className="relative flex flex-col items-center">
-                                <ActionButton icon={Lightbulb} label={"Random Hint"} type={"button"}
-                                              onClick={handleRandomHint}/>
-                                <span className="absolute -bottom-5 text-xs uppercase tracking-widest text-[var(--color-text-medium)]">
+                        <div className     ="flex gap-2 justify-center items-center">
+                            <div className ="relative flex flex-col items-center">
+                                <ActionButton icon    = {Lightbulb} label = {"Random Hint"} type = {"button"}
+                                              onClick = {handleRandomHint} disable = {totalHints <= 0 || isFetchingHint} />
+                                <span className       = "absolute -bottom-5 text-xs uppercase tracking-widest text-[var(--color-text-medium)]">
                                     Hints left: {totalHints}
                                 </span>
                             </div>
 
-                            <ActionButton label={"Guess"} type="submit"/>
+                            <ActionButton label = {"Guess"} type = "submit"/>
                         </div>
                     </form>
                 </>

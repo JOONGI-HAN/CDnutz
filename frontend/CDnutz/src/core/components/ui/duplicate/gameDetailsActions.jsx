@@ -1,12 +1,14 @@
 
-function ActionButton({ icon: Icon, label, onClick, type }) {
+function ActionButton({ icon: Icon, label, onClick, type, disable = false }) {
   return (
     <button
-      className = "flex items-center gap-3 rounded-lg
+      className = {`flex items-center gap-3 rounded-lg
                    bg-[var(--surface-card)] border border-[var(--surface-card-border)]
                    hover:bg-[var(--surface-card-hover)] hover:border-[var(--surface-card-border-hover)]
-                   transition-colors px-4 py-3 group text-nowrap"
-      onClick = {onClick} type = {type}
+                   transition-colors px-4 py-3 group text-nowrap ${disable ? `disabled:opacity-50
+                   disabled:cursor-not-allowed disabled:pointer-events-none`: ""}`}
+      disabled  = {disable}
+      onClick   = {onClick} type = {type}
     >
       {Icon &&
         <Icon

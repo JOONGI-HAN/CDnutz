@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 from django.db.models import Prefetch
 from django.db.models import Q
+from django.core.cache import cache
 
 from django.contrib.postgres.search import TrigramSimilarity
 
@@ -102,9 +103,9 @@ def guessGame(request) -> Response:
         dlcs = request.GET.get("dlcs")  # query params
 
         difficulty_criteria = {
-            "easy": {"rating_count": 1500},
-            "medium": {"rating_count": 1000},
-            "hard": {"rating_count": 500},
+            "easy"   : {"rating_count" : 1500},
+            "medium" : {"rating_count" : 1000},
+            "hard"   : {"rating_count" : 500},
         }
 
         if difficulty not in difficulty_criteria:
@@ -114,11 +115,11 @@ def guessGame(request) -> Response:
             VideoGame.objects
             .filter(
                 rating_count__gte = difficulty_criteria[difficulty]["rating_count"],
-                game_type = GameType.MAIN,
+                game_type         = GameType.MAIN,
             )
             .prefetch_related(
                 Prefetch("game_companies", queryset = GameCompany.objects.select_related("company")),
-                Prefetch("game_releases", queryset = GameRelease.objects.select_related("platform", "region")),
+                Prefetch("game_releases", queryset  = GameRelease.objects.select_related("platform", "region")),
                 "genres"
             )
         )
@@ -152,20 +153,20 @@ def guessGame(request) -> Response:
 
         full_game_data = GuessTheGameSerializer(choice).data
 
-        revealed_indices, summary_parts = _earlyReveal(difficulty, full_game_data)
+        revealed_indices, summary_parts, summary_separator = _earlyReveal(difficulty, full_game_data)
 
         # store in redis
         request.session['gtg_state'] = {
-            'game_id': choice.id,
-            'difficulty': difficulty,
-            'answer': re.sub(r'[^a-zA-Z0-9\s]', '', choice.title).lower(),
-            'hints_remaining': 3,
-            'guesses_made': 0,
-            'cover_id': choice.cover,  # django auto-serializes the session cache to JSON; can't process raw bytes
-            'game_cover': None,  # populated by the cover endpoint on initial GET
-            'revealed_fields': revealed_indices,
-            'revealed_summary': summary_parts,
-            'full_data': full_game_data
+            'game_id'           : choice.id,
+            'difficulty'        : difficulty,
+            'answer'            : re.sub(r'[^a-zA-Z0-9\s]', '', choice.title).lower(),
+            'hints_remaining'   : 3,
+            'guesses_made'      : 0,
+            'cover_id'          : choice.cover,  # django auto-serializes the session cache to JSON; can't process raw bytes
+            'revealed_fields'   : revealed_indices,
+            'revealed_summary'  : summary_parts,
+            'summary_separator' : summary_separator,
+            'full_data'         : full_game_data
         }
 
         return Response(_build_safe_payload(
@@ -184,13 +185,16 @@ def guessGame(request) -> Response:
             category   = body["category"]
             index      = body["index"]
 
-            revealed   = state.get("revealed_fields")
+            revealed_fields  = state.get("revealed_fields")
 
             if state.get('hints_remaining', 0) <= 0:
                 return Response({"error": "No hints remaining"}, status = 400)
 
             full_list     = _resolve_by_path(full_game_data, category)
-            revealed_list = _resolve_by_path(revealed, category)
+            if isinstance(full_list, str): # means we hit summary, it is of type string [maybe, definitely not the best way to do this, but YOLO]
+                full_list = split_summary(full_list, state.get("summary_separator"))
+
+            revealed_list = _resolve_by_path(revealed_fields, category)
 
             if index is not None:
                 target = index
@@ -198,13 +202,14 @@ def guessGame(request) -> Response:
                 unrevealed = [i for i in range(len(full_list)) if i not in revealed_list]
                 if not unrevealed:
                     return Response({"error": "Nothing left to reveal"}, status = 400)
+
                 target = random.choice(unrevealed)
 
             if target not in revealed_list:
                 revealed_list.append(target)
 
             state['hints_remaining']    -= 1
-            state['revealed_fields']     = revealed
+            state['revealed_fields']     = revealed_fields
             request.session['gtg_state'] = state
             request.session.modified     = True
 
@@ -213,7 +218,7 @@ def guessGame(request) -> Response:
             return Response({
                 "payload"         : _build_safe_payload(
                     full_game_data,
-                    revealed,
+                    revealed_fields,
                     summary_parts,
                 )
             })
@@ -229,7 +234,7 @@ def guessGame(request) -> Response:
                 "answer")
 
             if state.get('guesses_made') >= 3 or correct:
-                revealed_indices, summary_parts = _earlyReveal(state.get("difficulty"), full_game_data, game_over = True)
+                revealed_indices, summary_parts, summary_separator = _earlyReveal(state.get("difficulty"), full_game_data, game_over = True)
                 cover = _get_cover_bytes(state, game_over = True)
 
                 request.session['gtg_state'] = state
@@ -265,7 +270,6 @@ def guessGameCover(request) -> Response:
         return Response({"cover": None}, status = 400)
 
     cover = _get_cover_bytes(state)
-    request.session['gtg_state'] = state
 
     return Response({"cover": cover})
 
@@ -311,24 +315,24 @@ def _build_safe_payload(full_game_data, revealed_indices, summary_parts, cover =
     return payload
 
 
-def _get_cover_bytes(state, game_over=False):
+def _get_cover_bytes(state, game_over = False):
     if not state:
         return None
 
-    if state.get("game_cover"):
-        cover_bytes = base64.b64decode(state["game_cover"])
-    else:
-        cover_id    = state.get("cover_id")
-        if not cover_id:
-            return None
+    cover_id = state.get("cover_id")
+    if not cover_id:
+        return None
 
+    cache_key   = f"gtg_cover_{cover_id}"
+    cover_bytes = cache.get(cache_key)
+
+    if cover_bytes is None:
         try:
             resp = requests.get(utils.construct_igdb_url(cover_id), timeout = 5)
             resp.raise_for_status()
 
             cover_bytes = resp.content
-            state["game_cover"] = _encode_b64(cover_bytes)
-
+            cache.set(cache_key, cover_bytes, timeout = 3600)
         except requests.exceptions.RequestException:
             return None
 
@@ -340,9 +344,10 @@ def _get_cover_bytes(state, game_over=False):
 
     return _encode_b64(pixelated)
 
-def _earlyReveal(difficulty: str, choice: dict, game_over: bool = False) -> tuple[dict, list]:
+def _earlyReveal(difficulty: str, choice: dict, game_over: bool = False) -> tuple[dict, list, str]:
     reveal_percentage = 0.0
-    summary_text      = choice.get("summary") or ""
+    summary_separator = ""
+    summary_text      = (choice.get("summary") or "").strip()
     summary_parts     = []
     release_date      = (choice.get("release_date") or "").split("-")
     title             = choice.get("title") or ""
@@ -350,15 +355,18 @@ def _earlyReveal(difficulty: str, choice: dict, game_over: bool = False) -> tupl
     match difficulty:
         case "easy":
             reveal_percentage = 0.30
-            summary_parts     = [s for s in summary_text.split('.') if s.strip()]
+            summary_separator = "."
+            summary_parts = split_summary(summary_text, summary_separator)
         case "medium":
             reveal_percentage = 0.15
-            summary_parts     = [s for s in re.split(r'[.,]', summary_text) if s.strip()]
+            summary_separator = ".,"
+            summary_parts = split_summary(summary_text, summary_separator)
             if len(release_date) > 2:
                 release_date[2] = "xx"
         case "hard":
             reveal_percentage = 0.0
-            summary_parts     = [s for s in re.split(r'[.,]', summary_text) if s.strip()]
+            summary_separator = ".,"
+            summary_parts = split_summary(summary_text, summary_separator)
             if len(release_date) > 1:
                 release_date[1] = "xx"
             if len(release_date) > 2:
@@ -394,12 +402,12 @@ def _earlyReveal(difficulty: str, choice: dict, game_over: bool = False) -> tupl
                 "publishers": list(range(pubs_len)),
             },
             "summary": list(range(summary_len)),
-        }, summary_parts
+        }, summary_parts, summary_separator
 
 
     total_items = len(pool)
     if total_items == 0:
-        return {"release_date": "", "genres": [], "companies": {"developers": [], "publishers": []}, "summary": []}, summary_parts
+        return {"release_date": "", "genres": [], "companies": {"developers": [], "publishers": []}, "summary": []}, summary_parts, summary_separator
 
     count_to_reveal = math.ceil(total_items * reveal_percentage)
     selected_items  = random.sample(pool, count_to_reveal)
@@ -448,7 +456,13 @@ def _earlyReveal(difficulty: str, choice: dict, game_over: bool = False) -> tupl
         elif category == "summary":
             result["summary"].append(idx)
 
-    return result, summary_parts
+    return result, summary_parts, summary_separator
+
+
+def split_summary(summary: str, summary_separator: str):
+    summary_parts = re.split(rf"(?<=[{summary_separator}])\s*", summary)
+
+    return [sentence for sentence in summary_parts if sentence] # sentences ending with a full stop, GET EM' OUT!
 
 
 def _title_tokens(title: str) -> set[str]:
@@ -516,6 +530,8 @@ def _encode_b64(img_bytes: bytes | str) -> str:
 
 
 def _resolve_by_path(obj, path):
+    # front end sends a hint category, but since not all hint categories belong to the same object level;
+    # for deeper categories we need their parent keys too to traverse down
     for key in path:
         obj = obj[key]
     return obj

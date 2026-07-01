@@ -4,16 +4,8 @@ import { useState, useRef, useEffect } from "react";
 
 import GameCover from "./gameCover";
 
-function inputField({
-    value,
-    onChange,
-    expanded,
-    onExpand,
-    placeholder = "Search...",
-    collapsible = false,
-    showIcon = true,
-    results,
-    loading
+function InputField({value, onChange, expanded, onExpand, results, loading,
+    placeholder = "Search...", collapsible = false, showIcon = true,
 }) {
     const [showDropdown, setShowDropdown] = useState(false);
     const containerRef = useRef(null);
@@ -52,9 +44,9 @@ function inputField({
                     value       = {value}
                     onChange    = {(e) => {
                         setShowDropdown(true);
-                        onChange?.(e.target.value);
+                        onChange(e.target.value);
                     }}
-                    onFocus     = {() => setShowDropdown(true)}
+                    onFocus     ={() => setShowDropdown(true)}
                     placeholder = {placeholder}
                     name        = "search--bar"
                     className   = {`w-full bg-[var(--interractive-background)] text-white
@@ -68,7 +60,7 @@ function inputField({
                 {!loading && results && results.length > 0 && showDropdown && (
                     <div className     = "absolute top-full left-0 w-full mt-2 z-50 box-border bg-[var(--secondary-background)]
                                           border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden">
-                        <div className = "flex flex-col max-h-[320px] overflow-y-auto rounded-2xl pr-1 [&::-webkit-scrollbar]:w-1.5
+                        <div className = "flex flex-col max-h-[320px] overflow-y-auto rounded-2xl [&::-webkit-scrollbar]:w-1.5
                                           [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[var(--border)]
                                           [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[var(--color-primary)]">
                             {results.map((item, index) => (
@@ -116,4 +108,4 @@ function inputField({
     );
 }
 
-export default inputField;
+export default InputField;
