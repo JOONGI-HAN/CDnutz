@@ -23,12 +23,13 @@ function Field({ children, className = "", isCard }) {
 }
 
 
-function GameDescriptors({ data, hintRequest, variant = GameDescriptorsVariants.ROW, redacted = false }) {
+function GameDescriptors({ data, hintRequest, variant = GameDescriptorsVariants.ROW, redacted = false, disable = false }) {
   const isCard = variant === GameDescriptorsVariants.CARD;
 
   const redactionClass = (isRevealed) => {
     return isRevealed === false
-      ? "bg-black border-black text-transparent cursor-pointer select-none break-all rounded-sm"
+      ? `${disable ? "cursor-not-allowed" : "cursor-pointer"}
+       bg-black border-black text-transparent select-none break-all rounded-sm`
       : "";
   };
 
@@ -69,6 +70,8 @@ function GameDescriptors({ data, hintRequest, variant = GameDescriptorsVariants.
   `;
 
   const handleHintClick = (category, index, isRevealed) => {
+    if (disable) return;
+
     if (isRevealed === false) {
       hintRequest(category, index);
     }

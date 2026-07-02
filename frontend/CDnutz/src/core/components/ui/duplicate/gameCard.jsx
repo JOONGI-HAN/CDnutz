@@ -3,7 +3,7 @@ import GameDescriptors from "./gameDescriptors.jsx";
 
 import {GameDescriptorsVariants} from "../../../enums.js";
 
-function GameCard({ data, coverLoading, hintRequest, standalone = false, redacted = false, showDescriptors = false }) {
+function GameCard({ data, coverLoading, hintRequest, standalone = false, redacted = false, showDescriptors = false,  disable = false }) {
 
     {/* GuessTheGame/Standalone mode descriptors always visible | In hero mode: descriptors only mounted when DetailsHero signals CARD layout */}
     const showCardDescriptors = standalone || showDescriptors;
@@ -34,7 +34,7 @@ function GameCard({ data, coverLoading, hintRequest, standalone = false, redacte
             {/* Game Descriptors */}
             {showCardDescriptors && (
                 <div className = "min-w-0 flex">
-                    <GameDescriptors data = {data} variant = {GameDescriptorsVariants.CARD} redacted = {redacted} hintRequest = {hintRequest} />
+                    <GameDescriptors data = {data} variant = {GameDescriptorsVariants.CARD} redacted = {redacted} hintRequest = {hintRequest} disable = {disable} />
                 </div>
             )}
 

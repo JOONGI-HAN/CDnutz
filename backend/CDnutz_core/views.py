@@ -96,6 +96,9 @@ def gameSearch(request):
     return Response(serialized_video_game.data, status = 200)
 
 
+_GUESSES_LEFT    = 3
+_HINTS_REMAINING = 3
+_PIXEL_LEVEL     = 2
 @api_view(['GET', 'POST'])
 def guessGame(request) -> Response:
     if request.method == 'GET':
@@ -160,8 +163,8 @@ def guessGame(request) -> Response:
             'game_id'           : choice.id,
             'difficulty'        : difficulty,
             'answer'            : re.sub(r'[^a-zA-Z0-9\s]', '', choice.title).lower(),
-            'hints_remaining'   : 3,
-            'guesses_made'      : 0,
+            'hints_remaining'   : _HINTS_REMAINING,
+            'guesses_left'      : _GUESSES_LEFT,
             'cover_id'          : choice.cover,  # django auto-serializes the session cache to JSON; can't process raw bytes
             'revealed_fields'   : revealed_indices,
             'revealed_summary'  : summary_parts,
@@ -173,7 +176,9 @@ def guessGame(request) -> Response:
             full_game_data,
             revealed_indices,
             summary_parts,
-            cover = None  # front end will handle a placeholder separately
+            guesses_left  = request.session.get("gtg_state", {}).get("guesses_left"),
+            hints_left    = request.session.get("gtg_state", {}).get("hints_remaining"),
+            cover         = None  # front end will handle a placeholder separately
         ))
 
     else:
@@ -220,31 +225,34 @@ def guessGame(request) -> Response:
                     full_game_data,
                     revealed_fields,
                     summary_parts,
-                )
+                ),
+                "hints_left"      : state.get("hints_remaining"),
             })
 
         else:
             user_guess = body.get("guess", "")
 
-            state["guesses_made"]        = state.get("guesses_made", 0) + 1
-            request.session["gtg_state"] = state
-            request.session.modified     = True  # for some reason without this; the session doesn't update properly
-
             correct = re.sub(r'[^a-zA-Z0-9\s]', '', user_guess).lower() == state.get(
                 "answer")
 
-            if state.get('guesses_made') >= 3 or correct:
-                revealed_indices, summary_parts, summary_separator = _earlyReveal(state.get("difficulty"), full_game_data, game_over = True)
-                cover = _get_cover_bytes(state, game_over = True)
+            if not correct:
+                state["guesses_left"] = state.get("guesses_left", _GUESSES_LEFT) - 1
+                request.session["gtg_state"] = state
+                request.session.modified = True  # for some reason without this; the session doesn't update properly
+
+            if state.get('guesses_left') <= 0 or correct:
+                game_over = True
+
+                revealed_indices, summary_parts, summary_separator = _earlyReveal(state.get("difficulty"), full_game_data, game_over)
+                cover = _get_cover_bytes(state, game_over)
 
                 request.session['gtg_state'] = state
                 request.session.modified     = True
 
-                game_over = True if correct else False
-
                 return Response({
-                    "over"    : game_over,
-                    "payload" : _build_safe_payload(
+                    "over"         : game_over,
+                    "guesses_left" : state.get("guesses_left"),
+                    "payload"      : _build_safe_payload(
                         full_game_data,
                         revealed_indices,
                         summary_parts,
@@ -274,7 +282,7 @@ def guessGameCover(request) -> Response:
     return Response({"cover": cover})
 
 
-def _build_safe_payload(full_game_data, revealed_indices, summary_parts, cover = None, answer = None):
+def _build_safe_payload(full_game_data, revealed_indices, summary_parts, cover = None, answer = None, guesses_left = None, hints_left = None):
     payload = {
         "game_type": full_game_data["game_type"],
 
@@ -312,6 +320,12 @@ def _build_safe_payload(full_game_data, revealed_indices, summary_parts, cover =
     if answer:
         payload["title"] = answer
 
+    if guesses_left:
+        payload["guesses_left"] = guesses_left
+
+    if hints_left:
+        payload["hints_left"] = hints_left
+
     return payload
 
 
@@ -339,8 +353,8 @@ def _get_cover_bytes(state, game_over = False):
     if game_over:  # skip pixelation entirely; return raw cover
         return _encode_b64(cover_bytes)
 
-    guesses_made = state.get("guesses_made", 0)
-    pixelated = _pixelate_cover(cover_bytes, guesses_made)
+    guesses_left = state.get("guesses_left", _GUESSES_LEFT)
+    pixelated    = _pixelate_cover(cover_bytes, guesses_left)
 
     return _encode_b64(pixelated)
 
@@ -493,7 +507,7 @@ def _mask_text(text: str) -> str:
     return 'x' * len(text)
 
 
-def _pixelate_cover(img_bytes: bytes, guesses_made: int, game_over: bool = False) -> bytes | None:
+def _pixelate_cover(img_bytes: bytes, guesses_left: int, game_over: bool = False) -> bytes | None:
     if img_bytes is None:
         return None
 
@@ -502,13 +516,8 @@ def _pixelate_cover(img_bytes: bytes, guesses_made: int, game_over: bool = False
     if game_over:
         out = img  # full res
     else:
-        pixel_map = {
-            0 : 12,
-            1 : 24,
-            2 : 48,
-        }
-
-        block_size = pixel_map.get(guesses_made, None)
+        guesses_used = _GUESSES_LEFT - guesses_left
+        block_size   = _PIXEL_LEVEL * (2 ** (guesses_used + 1))
 
         if block_size is None:
             out = img

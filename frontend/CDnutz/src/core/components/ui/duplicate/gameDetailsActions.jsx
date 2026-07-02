@@ -6,7 +6,7 @@ function ActionButton({ icon: Icon, label, onClick, type, disable = false }) {
                    bg-[var(--surface-card)] border border-[var(--surface-card-border)]
                    hover:bg-[var(--surface-card-hover)] hover:border-[var(--surface-card-border-hover)]
                    transition-colors px-4 py-3 group text-nowrap ${disable ? `disabled:opacity-50
-                   disabled:cursor-not-allowed disabled:pointer-events-none`: ""}`}
+                   disabled:cursor-not-allowed`: "cursor-pointer"}`}
       disabled  = {disable}
       onClick   = {onClick} type = {type}
     >
