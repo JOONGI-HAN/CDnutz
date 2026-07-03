@@ -167,11 +167,38 @@ function GameDescriptors({ data, hintRequest, variant = GameDescriptorsVariants.
 
           {Array.isArray(data.summary) ? (
               <p className = {summaryValueClass}>
-                {data.summary.map((chunk, index) => (
-                  <span key = {index} className = {redactionClass(chunk.revealed)} onClick = {() => {handleHintClick("summary", index, chunk.revealed)}}>
-                    {chunk.text}
-                  </span>
-                ))}
+                {data.summary.map((chunk, index) => {
+                  {/* revealed chunks with game title in them are independent spans that cannot be interacted with */}
+                  if (chunk.revealed && chunk.sensitive_spans?.length > 0) {
+                    const pieces = [];
+                    let cursor = 0;
+
+                    chunk.sensitive_spans.forEach(([start, end], spanIndex) => {
+                      if (start > cursor) {
+                        pieces.push(chunk.text.slice(cursor, start));
+                      }
+                      pieces.push(
+                        <span key = {`hidden-${index}-${spanIndex}`} className = "bg-gradient-to-r from-[var(--color-trending)]
+                                                                                  to-amber-500 bg-clip-text text-transparent font-bold drop-shadow-sm">
+                          {chunk.text.slice(start, end)}
+                        </span>
+                      );
+                      cursor = end;
+                    });
+
+                    if (cursor < chunk.text.length) {
+                      pieces.push(chunk.text.slice(cursor));
+                    }
+
+                    return <span key = {index}>{pieces} {" "}</span>;
+                  }
+
+                  return (
+                    <span key = {index} className = {redactionClass(chunk.revealed)} onClick = {() => {handleHintClick("summary", index, chunk.revealed)}}>
+                      {chunk.text} {" "}
+                    </span>
+                  );
+                })}
               </p>
           ) : (
               <p className = {`${summaryValueClass} ${redactionClass(data.summary.revealed)}`}>

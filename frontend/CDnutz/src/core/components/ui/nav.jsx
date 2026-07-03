@@ -44,7 +44,7 @@ function Nav({ toggleMenu }) {
           </div>
 
           <div className = "flex-1 flex items-center">
-            <SearchBar expanded = {searchExpanded} value = {searchQuery} onChange = {setSearchQuery} results = {results} loading = {loading} />
+            <SearchBar expanded = {searchExpanded} value = {searchQuery} onChange = {setSearchQuery} results = {results} loading = {loading} browsingMode = {true} />
           </div>
 
         </>
@@ -70,13 +70,14 @@ function Nav({ toggleMenu }) {
 
           <div className = "flex-1 flex items-center justify-center max-xsm:justify-end">
             <SearchBar
-              value       = {searchQuery}
-              onChange    = {setSearchQuery}
-              expanded    = {searchExpanded}
-              onExpand    = {() => setSearchExpanded(true)}
-              collapsible = {true}
-              results     = {results}
-              loading     = {loading}
+              value        = {searchQuery}
+              onChange     = {setSearchQuery}
+              expanded     = {searchExpanded}
+              onExpand     = {() => setSearchExpanded(true)}
+              collapsible  = {true}
+              results      = {results}
+              loading      = {loading}
+              browsingMode = {true}
             />
           </div>
 

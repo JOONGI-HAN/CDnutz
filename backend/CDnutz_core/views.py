@@ -97,7 +97,7 @@ def gameSearch(request):
 
 
 _GUESSES_LEFT    = 3
-_HINTS_REMAINING = 3
+_HINTS_REMAINING = 7
 _PIXEL_LEVEL     = 2
 @api_view(['GET', 'POST'])
 def guessGame(request) -> Response:
@@ -282,15 +282,57 @@ def guessGameCover(request) -> Response:
     return Response({"cover": cover})
 
 
+def _redact_spans(text: str, spans: list[tuple[int, int]], placeholder: str) -> tuple[str, list[list[int]]]:
+    pieces = []
+    sensitive_spans = []
+    cursor = 0      # position in the original text
+    out_cursor = 0  # position in the text being built
+
+    for start, end in spans:
+        pieces.append(text[cursor:start])
+        out_cursor += start - cursor
+
+        pieces.append(placeholder)
+        sensitive_spans.append([out_cursor, out_cursor + len(placeholder)])
+        out_cursor += len(placeholder)
+
+        cursor = end
+
+    pieces.append(text[cursor:])
+    return "".join(pieces), sensitive_spans
+
+
+def _build_summary_entry(part, index, revealed_indices, title, mask_title):
+    revealed = index in revealed_indices
+
+    if not revealed:
+        return {"text": _mask_text(part), "revealed": False, "sensitive_spans": []}
+
+    if not mask_title:
+        return {"text": part, "revealed": True, "sensitive_spans": []}
+
+    spans = _find_title_span(part, title)
+    if not spans:
+        return {"text": part, "revealed": True, "sensitive_spans": []}
+
+    placeholder = "*Sensitive information here*"
+    redacted_text, sensitive_spans = _redact_spans(part, spans, placeholder)
+
+    return {"text": redacted_text, "revealed": True, "sensitive_spans": sensitive_spans}
+
+
 def _build_safe_payload(full_game_data, revealed_indices, summary_parts, cover = None, answer = None, guesses_left = None, hints_left = None):
+    # When game is over and answer is displayed in payload, it's fine to display titles within summary chunks too
+    mask_title = answer is None
+    title = full_game_data.get("title") or ""
+
     payload = {
         "game_type": full_game_data["game_type"],
 
         "release_date": revealed_indices["release_date"],
 
         "summary": [
-            {"text": part, "revealed": True} if i in revealed_indices["summary"]
-            else {"text": _mask_text(part), "revealed": False}
+            _build_summary_entry(part, i, revealed_indices["summary"], title, mask_title)
             for i, part in enumerate(summary_parts)
         ],
 
@@ -364,7 +406,6 @@ def _earlyReveal(difficulty: str, choice: dict, game_over: bool = False) -> tupl
     summary_text      = (choice.get("summary") or "").strip()
     summary_parts     = []
     release_date      = (choice.get("release_date") or "").split("-")
-    title             = choice.get("title") or ""
 
     match difficulty:
         case "easy":
@@ -426,33 +467,6 @@ def _earlyReveal(difficulty: str, choice: dict, game_over: bool = False) -> tupl
     count_to_reveal = math.ceil(total_items * reveal_percentage)
     selected_items  = random.sample(pool, count_to_reveal)
 
-    # for any selected summary part that contains the game title, swap it out
-    selected_summary_indices = {idx for cat, idx in selected_items if cat == "summary"}
-
-    for i, (category, idx) in enumerate(selected_items):
-        if category != "summary":
-            continue
-        if not _contains_title(summary_parts[idx], title):
-            continue
-
-        # find summary indices not already selected and not containing the title
-        safe_replacements = [
-            j for j in range(summary_len)
-            if j not in selected_summary_indices
-            and not _contains_title(summary_parts[j], title)
-        ]
-
-        if safe_replacements:
-            replacement = random.choice(safe_replacements)
-            selected_items[i] = ("summary", replacement)
-            selected_summary_indices.discard(idx)
-            selected_summary_indices.add(replacement)
-        else:
-            # no safe swap available — just drop this one, don't reveal it
-            selected_items[i] = None
-
-    selected_items = [item for item in selected_items if item is not None]
-
     result = {
         "release_date" : formatted_date,
         "genres"       : [],
@@ -476,30 +490,47 @@ def _earlyReveal(difficulty: str, choice: dict, game_over: bool = False) -> tupl
 def split_summary(summary: str, summary_separator: str):
     summary_parts = re.split(rf"(?<=[{summary_separator}])\s*", summary)
 
-    return [sentence for sentence in summary_parts if sentence] # sentences ending with a full stop, GET EM' OUT!
+    return [sentence for sentence in summary_parts if sentence] # end of sentence full stop, result in "", GET EM' OUT!
 
 
-def _title_tokens(title: str) -> set[str]:
+def _normalize(text: str) -> str:
+    # replace any punctuation with a whitespace to preserve 1:1 string length
+    return re.sub(r'[^\w\s]', ' ', text.lower())
+
+
+def _title_tokens(title: str) -> list[str]:
     """
-    tokenizing a title e.g. Warcraft III: Reign of Chaos -> {warcraft, reigns, of, chaos}
+    tokenizing a title e.g. Warcraft III: Reign of Chaos -> {warcraft, reign, of, chaos}
     I do this because Warcraft III != Warfcraft 3
     """
-    words = re.sub(r'[^\w\s]', '', title.lower()).split()
-    return {
+
+    words = _normalize(title).split()
+    return [
         w for w in words
         if not re.fullmatch(r'[ivxlcdm]+', w)  # drop roman numerals
-        and not re.fullmatch(r'\d+', w)          # drop arabic numerals
-    }
+        and not re.fullmatch(r'\d+', w)        # drop arabic numerals
+    ]
 
 
-def _contains_title(text: str, title: str) -> bool:
+def _find_title_span(text: str, title: str) -> list[tuple[int, int]]:
     if not title:
-        return False
+        return []
+
     tokens = _title_tokens(title)
     if not tokens:
-        return False
-    text_lower = text.lower()
-    return all(re.search(r'\b' + re.escape(token) + r'\b', text_lower) for token in tokens)
+        return []
+
+    text_norm = _normalize(text)
+
+    connector = r'[\W_]*(?:(?:\d+|[ivxlcdm]+)[\W_]*)?'
+    edge      = r'(?:[\W_]*(?:\d+|[ivxlcdm]+))?'
+
+    pattern   = r'\b' + edge + connector.join(re.escape(token) for token in tokens) + edge + r'\b'
+
+    return [m.span() for m in re.finditer(pattern, text_norm)]
+
+def _contains_title(text: str, title: str) -> bool:
+    return _find_title_span(text, title) is not None
 
 
 def _mask_text(text: str) -> str:

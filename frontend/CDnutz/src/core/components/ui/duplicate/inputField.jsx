@@ -1,14 +1,17 @@
 import { Search } from "lucide-react";
 
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 
 import GameCover from "./gameCover";
 
-function InputField({value, onChange, expanded, onExpand, results, loading,
+function InputField({value, onChange, expanded, onExpand, results, loading, browsingMode = false,
     placeholder = "Search...", collapsible = false, showIcon = true,
 }) {
     const [showDropdown, setShowDropdown] = useState(false);
     const containerRef = useRef(null);
+
+    const navigate = useNavigate();
 
     const visibility = collapsible ?
         (expanded ? "flex" : "hidden xsm:flex")
@@ -28,6 +31,10 @@ function InputField({value, onChange, expanded, onExpand, results, loading,
     const handleSelect = (item) => {
         onChange(item.title);
         setShowDropdown(false);
+
+        if (browsingMode) {
+            navigate(`/game/${item.id}`);
+        }
     };
 
     return (
@@ -78,11 +85,11 @@ function InputField({value, onChange, expanded, onExpand, results, loading,
 
                                     <div className      = "flex flex-col xsm:flex-row xsm:items-center justify-between flex-1 min-w-0 gap-1 xsm:gap-4">
                                         <span className = "text-[13px] font-semibold text-white truncate">
-                                            {item?.title}
+                                            {item.title}
                                         </span>
                                         <span className = "text-[11px] font-bold uppercase tracking-wider text-[var(--color-primary)]
                                                            bg-[var(--interractive-background)] px-2.5 py-0.5 rounded-full shrink-0 self-start xsm:self-auto">
-                                            {item?.game_type}
+                                            {item.game_type}
                                         </span>
                                     </div>
                                 </div>

@@ -64,14 +64,31 @@ function DetailsHero({ data }) {
 
               <div className="w-[50%] flex flex-wrap gap-x-3 gap-y-1 mb-6">
                 {(() => {
-                  const seen   = new Set()
-                  const pubIds = new Set(data.companies.publishers.map((c) => c.id))
+                  const seen= new Set()
+                  const pubFrequencies = data.companies.publishers.reduce((accumulator, company) => {
+
+                          if (accumulator.has(company.id)) {
+                            const count = accumulator.get(company.id)
+                            accumulator.set(company.id, count + 1)
+                          } else {
+                            accumulator.set(company.id, 1)
+                          }
+
+                          return accumulator
+                      }
+                      , new Map())
 
                   return (
                     <>
                       {data.companies.developers.map((company) => {
+
+                        if (seen.has(company.id)) {
+                          return
+                        }
+
                         seen.add(company.id)
-                        const isAlso = pubIds.has(company.id)
+                        const isAlso = pubFrequencies.has(company.id)
+
                         return (
                           <span
                             key       = {company.id}
@@ -88,7 +105,7 @@ function DetailsHero({ data }) {
                       })}
 
                       {data.companies.publishers.map((company) => {
-                        if (seen.has(company.id)) return null
+                        if (seen.has(company.id)) return
                         return (
                           <span
                             key       = {company.id}
