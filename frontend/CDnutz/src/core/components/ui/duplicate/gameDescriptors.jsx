@@ -6,6 +6,8 @@
 
 import {GameDescriptorsVariants} from "../../../enums.js";
 
+import { useMemo } from "react";
+
 function Field({ children, className = "", isCard }) {
   if (isCard) {
     return (
@@ -77,6 +79,14 @@ function GameDescriptors({ data, hintRequest, variant = GameDescriptorsVariants.
     }
   };
 
+  const uniquePlatforms = useMemo(() => {
+    if (!data?.releases) return [];
+
+    return Array.from(
+      new Map(data.releases.map((r) => [r.platform.id, r.platform])).values()
+    );
+  }, [data.releases]);
+
   return (
     <div className = {wrapperClass}>
 
@@ -108,7 +118,8 @@ function GameDescriptors({ data, hintRequest, variant = GameDescriptorsVariants.
               <p className = {companyValueClass}>
                 {data.companies.developers.map((c, i, arr) => (
                     <span key = {i}>
-                      <span className = {redactionClass(c.revealed)} onClick = {() => {handleHintClick(["companies", "developers"], i, c.revealed)}}>
+                      <span className = {redactionClass(c.revealed)}
+                            onClick = {() => {handleHintClick(["companies", "developers"], i, c.revealed)}}>
                         {c.name}
                       </span>
                       {i < arr.length - 1 && ", "}
@@ -152,9 +163,9 @@ function GameDescriptors({ data, hintRequest, variant = GameDescriptorsVariants.
         <Field isCard = {isCard}>
           <p className = {`${labelClass} ${isCard ? 'mb-2' : ''}`}>Platforms</p>
           <div className = "flex flex-wrap gap-1.5">
-            {data.releases.map((release, i) => (
-              <span key = {i} className = {platformPillClass}>
-                {release.platform.name}
+            {uniquePlatforms.map((platform) => (
+              <span key = {platform.id} className = {platformPillClass}>
+                {platform.name}
               </span>
             ))}
           </div>

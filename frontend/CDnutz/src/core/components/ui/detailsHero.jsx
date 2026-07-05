@@ -6,7 +6,7 @@ import ActionButton    from './duplicate/gameDetailsActions';
 import GameDescriptors from './duplicate/gameDescriptors';
 import GameCard        from './duplicate/gameCard';
 
-import {useState} from "react"
+import {useState, useMemo} from "react"
 
 import useWindowSizeListener          from "../../hooks/useWindowSizeListener";
 import {GameDescriptorsVariants, Breakpoints} from "../../enums.js";
@@ -41,6 +41,63 @@ function DetailsHero({ data }) {
 
   const showCardDescriptors = descriptorVariant === GameDescriptorsVariants.CARD;
 
+  const companyTags = useMemo(() => {
+    if (!data?.companies) return null;
+
+    const seen = new Set();
+    const pubFrequencies = data.companies.publishers.reduce((accumulator, company) => {
+      if (accumulator.has(company.id)) {
+        const count = accumulator.get(company.id);
+        accumulator.set(company.id, count + 1);
+      } else {
+        accumulator.set(company.id, 1);
+      }
+      return accumulator;
+    }, new Map());
+
+    return (
+      <>
+        {data.companies.developers.map((company) => {
+          if (seen.has(company.id)) {
+            return null;
+          }
+
+          seen.add(company.id);
+          const isAlso = pubFrequencies.has(company.id);
+
+          return (
+            <span
+              key       = {company.id}
+              className = {`text-[0.7rem] uppercase tracking-widest pb-px ${
+              isAlso
+                ? "inline-block text-white/70 border-b border-[var(--color-rating)]" +
+                  " after:block after:h-px after:bg-white/20"
+                : "text-[var(--color-rating)] border-b border-[var(--color-rating)]"
+              }`}
+            >
+              {company.name}
+            </span>
+          );
+        })}
+
+        {data.companies.publishers.map((company) => {
+          if (seen.has(company.id)) return null;
+          seen.add(company.id);
+
+          return (
+            <span
+              key       = {company.id}
+              className = "text-[0.7rem] uppercase tracking-widest border-b pb-px
+                           text-white/70 border-white/20"
+            >
+              {company.name}
+            </span>
+          );
+        })}
+      </>
+    );
+  }, [data.companies]);
+
   return (
       <div>
         <div
@@ -63,62 +120,7 @@ function DetailsHero({ data }) {
               </div>
 
               <div className="w-[50%] flex flex-wrap gap-x-3 gap-y-1 mb-6">
-                {(() => {
-                  const seen= new Set()
-                  const pubFrequencies = data.companies.publishers.reduce((accumulator, company) => {
-
-                          if (accumulator.has(company.id)) {
-                            const count = accumulator.get(company.id)
-                            accumulator.set(company.id, count + 1)
-                          } else {
-                            accumulator.set(company.id, 1)
-                          }
-
-                          return accumulator
-                      }
-                      , new Map())
-
-                  return (
-                    <>
-                      {data.companies.developers.map((company) => {
-
-                        if (seen.has(company.id)) {
-                          return
-                        }
-
-                        seen.add(company.id)
-                        const isAlso = pubFrequencies.has(company.id)
-
-                        return (
-                          <span
-                            key       = {company.id}
-                            className = {`text-[0.7rem] uppercase tracking-widest pb-px ${
-                            isAlso
-                              ? "inline-block text-white/70 border-b border-[var(--color-rating)]" +
-                                " after:block after:h-px after:bg-white/20"
-                              : "text-[var(--color-rating)] border-b border-[var(--color-rating)]"
-                            }`}
-                          >
-                            {company.name}
-                          </span>
-                        )
-                      })}
-
-                      {data.companies.publishers.map((company) => {
-                        if (seen.has(company.id)) return
-                        return (
-                          <span
-                            key       = {company.id}
-                            className = "text-[0.7rem] uppercase tracking-widest border-b pb-px
-                                         text-white/70 border-white/20"
-                          >
-                            {company.name}
-                          </span>
-                        )
-                      })}
-                    </>
-                  )
-                })()}
+                {companyTags}
               </div>
 
               <div className = "grid xl:grid-cols-[250px_minmax(0,500px)_minmax(max-content,auto)] gap-6">

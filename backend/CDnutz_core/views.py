@@ -97,7 +97,7 @@ def gameSearch(request):
 
 
 _GUESSES_LEFT    = 3
-_HINTS_REMAINING = 7
+_HINTS_REMAINING = 3
 _PIXEL_LEVEL     = 2
 @api_view(['GET', 'POST'])
 def guessGame(request) -> Response:

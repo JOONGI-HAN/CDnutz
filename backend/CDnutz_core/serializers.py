@@ -277,9 +277,9 @@ class GuessTheGameSerializer(serializers.ModelSerializer):
         }
         for gc in obj.game_companies.all():
             if gc.developer:
-                companies["developers"].append({"id": gc.company.id, "name": gc.company.name, "website": gc.company.website})
+                companies["developers"].append({"id": gc.company.id, "name": gc.company.name})
             if gc.publisher:
-                companies["publishers"].append({"id": gc.company.id, "name": gc.company.name, "website": gc.company.website})
+                companies["publishers"].append({"id": gc.company.id, "name": gc.company.name})
         return companies
 
     class Meta:
