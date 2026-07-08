@@ -1,4 +1,6 @@
-import { Lightbulb, X } from 'lucide-react';
+import { Lightbulb, X, RotateCcw } from 'lucide-react';
+
+import confetti from "../assets/confetti.svg";
 
 import GameCard from './ui/duplicate/gameCard';
 import ActionButton from './ui/duplicate/gameDetailsActions';
@@ -32,6 +34,8 @@ export default function GuessTheGame() {
 
     const [guessesRemaining, setGuessesRemaining] = useState(null);
 
+    const [isWinner, setIsWinner] = useState(false);
+
     const { results, _ } = useDebounce('/cdnutz/api/game/search/', userGuess);
 
     const totalGuesses = useRef(null); // we use this to render the circles
@@ -51,41 +55,51 @@ export default function GuessTheGame() {
     }, [data]);
 
 
-    useEffect(() => {
-        async function loadGame() {
-            setLoading(true);
-            setCoverLoading(true);
-            setCover(null);
-            setGuessesRemaining(null);
-            setTotalHints(null)
+    const init = () => {
+        setLoading(true);
+        setCoverLoading(true);
+        setCover(null);
+        setGuessesRemaining(null);
+        setTotalHints(null);
+        setIsWinner(false);
 
-            try {
-                const gameRes = await fetch(`/cdnutz/api/guess-the-game?difficulty=${difficulty}&dlcs=${dlcs}`);
-                if (!gameRes.ok) { setError(`HTTP error ${gameRes.status}`); setLoading(false); return; }
-                const gameData = await gameRes.json();
-                setData(gameData);
-                setLoading(false);
-                setGuessesRemaining(gameData.guesses_left)
-                setTotalHints(gameData.hints_left)
+        gameOver.current     = false
+    }
 
-                totalGuesses.current = gameData.guesses_left
-            } catch {
-                setLoading(false);
-                setError(true)
-                return; // no need to fetch cover if game failed to return
-            }
+    const loadGame = async () => {
 
-            try {
-                const coverRes  = await fetch('/cdnutz/api/guess-the-game/cover');
-                const coverData = await coverRes.json();
-                if (coverData.cover) setCover(coverData.cover);
-            } catch (e) {
-                console.error("Cover fetch failed", e);
-            } finally {
-                setCoverLoading(false);
-            }
+        init();
+
+        try {
+            const gameRes = await fetch(`/cdnutz/api/guess-the-game?difficulty=${difficulty}&dlcs=${dlcs}`);
+            if (!gameRes.ok) { setError(`HTTP error ${gameRes.status}`); setLoading(false); return; }
+            const gameData = await gameRes.json();
+            setData(gameData);
+            setLoading(false);
+            setGuessesRemaining(gameData.guesses_left)
+            setTotalHints(gameData.hints_left)
+
+            totalGuesses.current = gameData.guesses_left
+
+        } catch {
+            setLoading(false);
+            setError(true)
+            return; // no need to fetch cover if game failed to return
         }
 
+        try {
+            const coverRes  = await fetch('/cdnutz/api/guess-the-game/cover');
+            const coverData = await coverRes.json();
+            if (coverData.cover) setCover(coverData.cover);
+        } catch (e) {
+            console.error("Cover fetch failed", e);
+        } finally {
+            setCoverLoading(false);
+        }
+    }
+
+
+    useEffect(() => {
         loadGame();
     }, [difficulty, dlcs]);
 
@@ -112,8 +126,13 @@ export default function GuessTheGame() {
              setData(result.payload);
              setCover(result.payload.cover);
 
+             {/* Render the final X wrong guess icon */}
              if (result.guesses_left !== undefined) {
                   setGuessesRemaining(result.guesses_left);
+             }
+
+             if (result.win === true) {
+                setIsWinner(true);
              }
 
              setIsSubmittingAnswer(false);
@@ -127,6 +146,17 @@ export default function GuessTheGame() {
 
         setUserGuess("")
     }
+
+    useEffect(() => {
+        if (!isWinner) return
+
+        const newGame = setTimeout(() => {loadGame()}, 3000)
+
+        return () => {clearTimeout(newGame)}
+
+        },
+        [isWinner, loadGame]
+    )
 
     async function obtainHint(elem, hintIdx) {
         if (totalHints <= 0 || isFetchingHint) return
@@ -172,45 +202,83 @@ export default function GuessTheGame() {
 
 
     return (
-        <div className = "h-vh my-8 flex flex-col gap-4 w-full max-w-6xl mx-auto px-6">
+        <div className = "h-screen my-8 relative isolate flex flex-col gap-4 w-full max-w-6xl mx-auto px-6">
+            <div className = {`absolute inset-0 -z-10 bg-no-repeat bg-[length:contain] bg-left-bottom
+                               transition-opacity duration-200 ease-in
+                               ${isWinner ? "opacity-100 animate-sparkle" : "opacity-0"}`}
+                 style = {{
+                    backgroundImage: `url(${confetti})`,
+                    backgroundColor: `var(--dark-transparent-background)`
+                 }}
+            />
+
+            {!isWinner && gameOver.current &&
+                <>
+                    <div className = "fixed inset-0 z-40 bg-[var(--surface-overlay)] backdrop-blur-sm" />
+
+                    <div className = "fixed inset-0 z-50 flex items-center justify-center px-6">
+                        <div className = "flex flex-col items-center gap-4 text-center">
+                            <h1 className = "text-4xl lg:text-6xl font-black tracking-wide uppercase leading-none text-balance
+                                             text-[var(--color-destructive)] drop-shadow-[0_0_30px_var(--color-destructive)]">
+                                Game over
+                            </h1>
+
+                            <p className = "text-[1.2rem] uppercase tracking-widest text-[var(--color-muted)] mb-1">
+                                Answer:{" "}
+                                <span className = "text-[1.5rem] uppercase tracking-wider text-[var(--color-text-soft)] bg-[var(--surface-card)]
+                                                   border border-[var(--surface-card-border)] rounded px-1.5 py-0.5">
+                                    {data.title}
+                                </span>
+                            </p>
+
+                            <ActionButton icon={RotateCcw} label={"Try again"} type={"button"} onClick={loadGame} />
+                        </div>
+                    </div>
+                </>
+            }
+
             {
                 !loading && !error &&
                 <>
                     <div className = "flex flex-col items-center gap-6">
 
-                        <div className = "flex gap-4 flex-wrap">
+                        <div className = "flex gap-4 flex-nowrap justify-center w-full">
                             {[...Array(totalGuesses.current)].map((_, index) => {
                                 const isWrong = index < (totalGuesses.current - guessesRemaining);
 
                                 return (
-                                    <div key       = {index}
-                                         className = {`w-[7vw] min-w-22 aspect-square rounded-full flex items-center justify-center transition-all duration-300
-                                         ${isWrong 
-                                            ? "bg-destructive shadow-[0_0_20px_var(--color-destructive)] scale-105" 
-                                            : "bg-[var(--interractive-background)]"}`}>
-                                         {isWrong && (
-                                            <X className="w-3/5 h-3/5 text-white stroke-[4] drop-shadow-md animate-in zoom-in duration-300" />
-                                         )}
+                                    <div key = {index}
+                                         className = {`flex-1 min-w-0 max-w-30 aspect-square rounded-full flex items-center justify-center transition-all duration-300
+                                         ${isWrong
+                                             ? "bg-destructive shadow-[0_0_20px_var(--color-destructive)] scale-105"
+                                             : "bg-[var(--interractive-background)]"}`}>
+                                        {isWrong && (
+                                            <X className = "w-3/5 h-3/5 text-white stroke-[4] drop-shadow-md animate-in zoom-in duration-300"/>
+                                        )}
                                     </div>
                                 )
                             })}
                         </div>
 
                         <div className = "w-full">
-                            <GameCard data = {{ ...data, cover: cover }} coverLoading = { coverLoading } redacted = { true } standalone = { true } hintRequest = {obtainHint} disable = {totalHints <= 0} />
+                            <GameCard data = {{...data, cover: cover}} coverLoading={coverLoading} redacted={true}
+                                      standalone={true} hintRequest={obtainHint} disable={totalHints <= 0}/>
                         </div>
                     </div>
 
                     <form className = "flex gap-2 flex-col xsm:flex-row items-center justify-center flex-wrap"
-                          onSubmit = {submitAnswer}>
+                          onSubmit  = {submitAnswer}>
                         <div className = "w-full xsm:w-[420px]">
-                            <GuessBar value = {userGuess} placeholder = {"Guess..."} onChange = {setUserGuess} showIcon = {false} results = {results} loading = {loading} />
+                            <GuessBar value = {userGuess} placeholder={"Guess..."} onChange={setUserGuess}
+                                      showIcon = {false} results={results} loading={loading}/>
                         </div>
-                        <div className     ="flex gap-2 justify-center items-center">
-                            <div className ="relative flex flex-col items-center">
-                                <ActionButton icon    = {Lightbulb} label = {"Random Hint"} type = {"button"}
-                                              onClick = {handleRandomHint} disable = {totalHints <= 0 || isFetchingHint || unrevealedPool.length === 0} />
-                                <span className       = "absolute -bottom-5 text-xs uppercase tracking-widest text-[var(--color-text-medium)]">
+                        <div className = "flex gap-2 justify-center items-center">
+                            <div className = "relative flex flex-col items-center">
+                                <ActionButton icon    = {Lightbulb} label={"Random Hint"} type={"button"}
+                                              onClick = {handleRandomHint}
+                                              disable = {totalHints <= 0 || isFetchingHint || unrevealedPool.length === 0}/>
+                                <span
+                                    className = "absolute -bottom-5 text-xs uppercase tracking-widest text-[var(--color-text-medium)]">
                                     Hints left: {totalHints}
                                 </span>
                             </div>

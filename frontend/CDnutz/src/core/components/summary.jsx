@@ -1,5 +1,3 @@
-import { Quote } from 'lucide-react';
-
 
 function Summary({ data, loading, error }) {
   return (

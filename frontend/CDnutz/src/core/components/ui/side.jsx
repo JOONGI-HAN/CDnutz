@@ -3,33 +3,28 @@ import { HelpCircle, Heart, MessagesSquare, Users, Home, Star } from 'lucide-rea
 import LoginButton from './duplicate/loginPromptButton.jsx';
 
 import { NavLink } from "react-router-dom";
-import Nav from "./nav.jsx";
-
+import { useState } from "react";
 
 const menuItems = {
   "Menu"     : [
 
     { "icon"   : Home,
       "label"  : "Homepage",
-      "active" : true,
       "link"   : "/"
     },
 
     { "icon"   : Users,
       "label"  : "Discover Friends",
-      "active" : false,
-      "link"   : "/"
+      "link"   : "/users"
     },
 
     { "icon"   : MessagesSquare,
       "label"  : "Community Forums",
-      "active" : false,
-      "link"   : "/"
+      "link"   : "/community-forums"
     },
 
     { "icon"   : HelpCircle,
       "label"  : "Guess the Game",
-      "active" : false,
       "link"   : "/guess-the-game?difficulty=easy&dlcs=0"
     },
   ],
@@ -38,20 +33,19 @@ const menuItems = {
 
     { "icon"   : Star,
       "label"  : "Favorites",
-      "active" : false,
-      "link"   : "/"
+      "link"   : "/favorites"
     },
 
     { "icon"   : Heart,
       "label"  : "Wishlist",
-      "active" : false,
-      "link"   : "/"
+      "link"   : "/wishlist"
     }
   ]
 };
 
 
 function Side({ menuOpen, menuClose }) {
+  const [activeElement, setActiveElement] = useState(menuItems.Menu[0].label);
 
   return (
     <>
@@ -82,9 +76,14 @@ function Side({ menuOpen, menuClose }) {
 
               <ul className = "flex flex-col gap-1">
                 {items.map((item) => (
-                  <li key = {item.label}>
-                    <NavLink to = {item.link} className = {`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all whitespace-nowrap
-                                                          ${item.active
+                  <li key = {item.label} onClick = {() => {
+                    return (
+                      setActiveElement(item.label)
+                    )
+                  }}>
+                    <NavLink to = {item?.link} className = {({ isActive }) =>
+                                                          `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all whitespace-nowrap
+                                                          ${isActive
                                                             ? "bg-[image:var(--accent-color)] text-white shadow-lg shadow-[var(--color-nav-active-shadow)]"
                                                             : "text-[var(--color-primary)] hover:text-white hover:bg-[var(--interractive-background)]"
                                                           }`}

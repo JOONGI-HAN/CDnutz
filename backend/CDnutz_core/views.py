@@ -251,6 +251,7 @@ def guessGame(request) -> Response:
 
                 return Response({
                     "over"         : game_over,
+                    "win"          : correct,
                     "guesses_left" : state.get("guesses_left"),
                     "payload"      : _build_safe_payload(
                         full_game_data,

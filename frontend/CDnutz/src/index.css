@@ -54,6 +54,7 @@
 
 @theme {
   --animate-loading: loading 0.75s ease infinite;
+  --animate-sparkle: sparkle 4s infinite ease-in-out alternate;
 }
 
 @keyframes loading {
@@ -63,6 +64,12 @@
   to {
     transform: rotate(1turn);
   }
+}
+
+@keyframes sparkle {
+  0%   { background-position : bottom left; }
+  50%  { background-position : bottom 2.5rem left; }
+  100% { background-position : bottom left; }
 }
 
 :root {
