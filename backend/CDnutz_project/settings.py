@@ -90,6 +90,12 @@ CACHES                   = {
     }
 }
 
+AUTHENTICATION_BACKENDS = [
+    "CDnutz_auth.backends.CustomAuthenticationBackend"
+]
+
+AUTH_USER_MODEL = "CDnutz_auth.CustomUser"
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',

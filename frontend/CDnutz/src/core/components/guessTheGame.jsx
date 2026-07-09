@@ -63,7 +63,7 @@ export default function GuessTheGame() {
         setTotalHints(null);
         setIsWinner(false);
 
-        gameOver.current     = false
+        gameOver.current     = false;
     }
 
     const loadGame = async () => {
