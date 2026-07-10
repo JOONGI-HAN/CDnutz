@@ -2,8 +2,8 @@ import { ArrowLeft, Menu, Moon } from "lucide-react";
 
 import logo from "../../assets/CDnav.png";
 
-import SearchBar   from "./duplicate/inputField.jsx";
-import LoginButton from "./duplicate/loginPromptButton.jsx";
+import SearchBar   from "./duplicate/inputField";
+import LoginButton from "./duplicate/actionButton";
 
 import { useState } from "react";
 
@@ -21,6 +21,11 @@ function Nav({ toggleMenu }) {
   const { results, loading } = useDebounce('/cdnutz/api/game/search/', searchQuery);
 
   useWindowSizeListener({ query: Breakpoints.XSM, actionFN: setSearchExpanded, matchState: false });
+
+
+  const loginButtonStyle = `px-4 py-2 text-[12px] font-semibold tracking-[0.8px] text-white
+                                   rounded-full cursor-pointer border border-[var(--accent-bright)]
+                                   bg-[image:var(--accent-color)] whitespace-nowrap hidden md:flex`
 
 
   return (
@@ -82,7 +87,7 @@ function Nav({ toggleMenu }) {
           </div>
 
           <div className = "flex items-center gap-3 flex-shrink-0">
-            <LoginButton className = "hidden md:flex" />
+            <LoginButton className = {loginButtonStyle} label = "LOGIN TO ACCOUNT" />
             <Moon className = "text-[var(--color-primary)] cursor-pointer w-5 h-5" />
           </div>
 

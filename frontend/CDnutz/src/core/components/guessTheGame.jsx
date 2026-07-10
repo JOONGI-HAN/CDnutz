@@ -3,7 +3,7 @@ import { Lightbulb, X, RotateCcw } from 'lucide-react';
 import confetti from "../assets/confetti.svg";
 
 import GameCard from './ui/duplicate/gameCard';
-import ActionButton from './ui/duplicate/gameDetailsActions';
+import ActionButton from './ui/duplicate/actionButton.jsx';
 import GuessBar from './ui/duplicate/inputField.jsx';
 
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -113,10 +113,10 @@ export default function GuessTheGame() {
         const response = await fetch(
             '/cdnutz/api/guess-the-game/',
             {
-                method  : "POST",
-                headers : {"Content-Type" : "application/json"},
-                body    : JSON.stringify({guess : userGuess})
-            }
+                    method  : "POST",
+                    headers : {"Content-Type" : "application/json"},
+                    body    : JSON.stringify({guess : userGuess})
+                }
         )
 
         const result = await response.json();
@@ -169,11 +169,11 @@ export default function GuessTheGame() {
             const response = await fetch(
             '/cdnutz/api/guess-the-game/',
             {
-                method  : "POST",
-                headers : {"Content-Type" : "application/json"},
-                body    : JSON.stringify({
-                    category : path,
-                    index    : hintIdx === undefined ? null : hintIdx
+                    method  : "POST",
+                    headers : {"Content-Type" : "application/json"},
+                    body    : JSON.stringify({
+                        category : path,
+                        index    : hintIdx === undefined ? null : hintIdx
                 })
                 }
             )

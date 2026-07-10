@@ -1,4 +1,3 @@
-import Dashboard from "./components/dashboard";
 import Sidebar from "./components/ui/side";
 import Nav from "./components//ui/nav"
 
@@ -11,6 +10,8 @@ function CDnutz() {
   const [darkTheme, setDarkTheme] = useState(false);
 
   const [menuOpen , setMenuOpen]   = useState(() => window.innerWidth >= 1024);
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (
     <div className  = {`${menuOpen ? "lg:pl-[var(--side-width)]" : "pl-0"} h-full bg-black

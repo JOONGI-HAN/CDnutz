@@ -1,9 +1,9 @@
 import { HelpCircle, Heart, MessagesSquare, Users, Home, Star } from 'lucide-react';
 
-import LoginButton from './duplicate/loginPromptButton.jsx';
+import LoginButton from "./duplicate/actionButton";
 
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
+
 
 const menuItems = {
   "Menu"     : [
@@ -45,7 +45,9 @@ const menuItems = {
 
 
 function Side({ menuOpen, menuClose }) {
-  const [activeElement, setActiveElement] = useState(menuItems.Menu[0].label);
+  const loginButtonStyle = `px-4 py-2 text-[12px] font-semibold tracking-[0.8px] text-white
+                                   rounded-full cursor-pointer border border-[var(--accent-bright)]
+                                   bg-[image:var(--accent-color)] whitespace-nowrap block text-center`
 
   return (
     <>
@@ -76,11 +78,7 @@ function Side({ menuOpen, menuClose }) {
 
               <ul className = "flex flex-col gap-1">
                 {items.map((item) => (
-                  <li key = {item.label} onClick = {() => {
-                    return (
-                      setActiveElement(item.label)
-                    )
-                  }}>
+                  <li key = {item.label}>
                     <NavLink to = {item?.link} className = {({ isActive }) =>
                                                           `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all whitespace-nowrap
                                                           ${isActive
@@ -99,8 +97,8 @@ function Side({ menuOpen, menuClose }) {
           ))}
         </nav>
 
-        <div className = "md:hidden px-4 w-64">
-          <LoginButton className = "block text-center" />
+        <div className = "md:hidden px-4 self-center">
+          <LoginButton className = {loginButtonStyle} label = "LOGIN TO ACCOUNT" />
         </div>
 
       </aside>

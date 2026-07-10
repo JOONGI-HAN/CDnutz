@@ -1,8 +1,8 @@
 
-function ActionButton({ icon: Icon, label, onClick, type, disable = false }) {
+function ActionButton({ className, icon: Icon, label, onClick, type, disable = false }) {
   return (
     <button
-      className = {`flex items-center gap-3 rounded-lg
+      className = {className || `flex items-center gap-3 rounded-lg
                    bg-[var(--surface-card)] border border-[var(--surface-card-border)]
                    hover:bg-[var(--surface-card-hover)] hover:border-[var(--surface-card-border-hover)]
                    transition-colors px-4 py-3 group text-nowrap ${disable ? `disabled:opacity-50

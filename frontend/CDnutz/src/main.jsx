@@ -1,7 +1,8 @@
 import Error404 from "./core/components/pageNotFound";
 import Dashboard from "./core/components/dashboard";
 import GameDetails from "./core/components/details";
-import GuessTheGame from "./core/components/guessTheGame.jsx";
+import GuessTheGame from "./core/components/guessTheGame";
+import Authenticate from "./core/components/authenticate.jsx";
 
 import CDnutz from "./core/app";
 import "./index.css";
@@ -16,7 +17,8 @@ const router = createBrowserRouter([
    children : [
      {index : true, element : <Dashboard />},
      {path  : "game/:id", element : <GameDetails />},
-     {path : "guess-the-game", element : <GuessTheGame />},
+     {path  : "guess-the-game", element : <GuessTheGame />},
+     {path  : "authenticate", element : <Authenticate />},
    ]},
   {path : "*", element : <Error404 />}
 ]);

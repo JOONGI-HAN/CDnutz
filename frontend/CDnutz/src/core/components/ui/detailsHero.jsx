@@ -2,7 +2,7 @@ import { Star, CircleCheck, CirclePlay, Gamepad2, HeartPlus, Pencil, Plus } from
 
 import StarRating      from './duplicate/starRating';
 import StatusButton    from './duplicate/gamePlayerCount';
-import ActionButton    from './duplicate/gameDetailsActions';
+import ActionButton    from './duplicate/actionButton.jsx';
 import GameDescriptors from './duplicate/gameDescriptors';
 import GameCard        from './duplicate/gameCard';
 
