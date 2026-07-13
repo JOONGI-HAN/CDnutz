@@ -1,11 +1,9 @@
-import { Search } from "lucide-react";
-
 import { useState, useRef, useEffect } from "react";
 
 import SearchResults from "./searchResults";
 
-function InputField({value, onChange, expanded, onExpand, results, loading, browsingMode = false,
-    placeholder = "Search...", collapsible = false, showIcon = true, basic = true
+function InputField({value, onChange, expanded, onExpand, results, loading, icon:Icon, browsingMode = false,
+    placeholder = "Search...", collapsible = false, showIcon = true, basic = true, type = "text", name
 }) {
     const [showDropdown, setShowDropdown] = useState(false);
     const containerRef = useRef(null);
@@ -32,9 +30,9 @@ function InputField({value, onChange, expanded, onExpand, results, loading, brow
                 ref       = {containerRef}
                 className = {`relative items-center w-full max-w-[420px] ${visibility}`}
             >
-                {showIcon && (
-                    <Search className = "absolute left-3 w-4 h-4 text-[var(--color-primary)] pointer-events-none" />
-                )}
+                {showIcon &&
+                    <Icon className = "absolute left-3 w-4 h-4 text-[var(--color-primary)] pointer-events-none" />
+                }
 
                 <input
                     value       = {value}
@@ -44,7 +42,8 @@ function InputField({value, onChange, expanded, onExpand, results, loading, brow
                     }}
                     onFocus     ={() => setShowDropdown(true)}
                     placeholder = {placeholder}
-                    name        = "search--bar"
+                    type        = {type}
+                    name        = {name || "search--bar"}
                     className   = {`w-full bg-[var(--interractive-background)] text-white
                                    ${showIcon ? "pl-8" : "pl-4"} pr-4 py-2 text-[13px] font-semibold rounded-full
                                    border border-[var(--border)]
@@ -67,7 +66,7 @@ function InputField({value, onChange, expanded, onExpand, results, loading, brow
                                  bg-[var(--interractive-background)]"
                     aria-label = "Open search"
                 >
-                    <Search className = "w-5 h-5" />
+                    <Icon className = "w-5 h-5" />
                 </button>
             )}
         </>

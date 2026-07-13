@@ -1,4 +1,4 @@
-import { ArrowLeft, Menu, Moon } from "lucide-react";
+import { ArrowLeft, Menu, Moon, Search } from "lucide-react";
 
 import logo from "../../assets/CDnav.png";
 
@@ -49,7 +49,15 @@ function Nav({ toggleMenu }) {
           </div>
 
           <div className = "flex-1 flex items-center">
-            <SearchBar expanded = {searchExpanded} value = {searchQuery} onChange = {setSearchQuery} results = {results} loading = {loading} browsingMode = {true} basic = {false} />
+            <SearchBar expanded     = {searchExpanded}
+                       value        = {searchQuery}
+                       onChange     = {setSearchQuery}
+                       results      = {results}
+                       loading      = {loading}
+                       browsingMode = {true}
+                       basic        = {false}
+                       icon         = {Search}
+            />
           </div>
 
         </>
@@ -84,6 +92,7 @@ function Nav({ toggleMenu }) {
               loading      = {loading}
               browsingMode = {true}
               basic        = {false}
+              icon         = {Search}
             />
           </div>
 

@@ -7,11 +7,8 @@ import { useState } from 'react';
 
 function CDnutz() {
 
-  const [darkTheme, setDarkTheme] = useState(false);
-
   const [menuOpen , setMenuOpen]   = useState(() => window.innerWidth >= 1024);
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (
     <div className  = {`${menuOpen ? "lg:pl-[var(--side-width)]" : "pl-0"} h-full bg-black
@@ -21,7 +18,7 @@ function CDnutz() {
 
       <Sidebar menuOpen    = {menuOpen} menuClose   = {() => setMenuOpen(false)} />
 
-      <Outlet /> {/* Always keep sidebar / topnav; only change insert different content here*/}
+      <Outlet /> {/* Always keep sidebar / top nav; only change insert different content here */}
 
     </div>
   );
