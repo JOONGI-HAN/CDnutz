@@ -269,8 +269,8 @@ export default function GuessTheGame() {
                     <form className = "flex gap-2 flex-col xsm:flex-row items-center justify-center flex-wrap"
                           onSubmit  = {submitAnswer}>
                         <div className = "w-full xsm:w-[420px]">
-                            <GuessBar value = {userGuess} placeholder={"Guess..."} onChange={setUserGuess}
-                                      showIcon = {false} results={results} loading={loading}/>
+                            <GuessBar value = {userGuess} placeholder = {"Guess..."} onChange = {setUserGuess}
+                                      showIcon = {false} results = {results} loading = {loading} basic = {false} />
                         </div>
                         <div className = "flex gap-2 justify-center items-center">
                             <div className = "relative flex flex-col items-center">

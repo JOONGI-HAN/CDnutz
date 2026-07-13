@@ -49,4 +49,4 @@ class CustomUser(AbstractUser):
         permissions   = [
             ("can_upload_new_games", "Can upload new games"),
             ("can_edit_old_games", "Can edit old games")
-        ]  # I have been thinking of adding this feature, letting specific upload new games to our database
+        ]  # I have been thinking of adding this feature, letting specific users upload new games to our database

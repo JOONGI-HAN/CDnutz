@@ -49,7 +49,7 @@ function Nav({ toggleMenu }) {
           </div>
 
           <div className = "flex-1 flex items-center">
-            <SearchBar expanded = {searchExpanded} value = {searchQuery} onChange = {setSearchQuery} results = {results} loading = {loading} browsingMode = {true} />
+            <SearchBar expanded = {searchExpanded} value = {searchQuery} onChange = {setSearchQuery} results = {results} loading = {loading} browsingMode = {true} basic = {false} />
           </div>
 
         </>
@@ -83,6 +83,7 @@ function Nav({ toggleMenu }) {
               results      = {results}
               loading      = {loading}
               browsingMode = {true}
+              basic        = {false}
             />
           </div>
 
