@@ -1,9 +1,9 @@
 import { useState } from "react";
 import {NavLink} from "react-router-dom";
 
-import AuthForm from "./ui/duplicate/authForm";
+import AuthForm from "./duplicate/authForm.jsx";
 
-import useRevealPassword from "../hooks/useRevealPassword";
+import useRevealPassword from "../../hooks/useRevealPassword.jsx";
 
 export default function Login({ showMobileToggle }) {
     const [loginForm, setLoginForm] = useState(
@@ -69,13 +69,17 @@ export default function Login({ showMobileToggle }) {
                         type        : "email",
                         placeholder : "xyz@example.com",
                         value       : loginForm.identifierInput,
-                        onChange    : (value) => {setLoginForm((prev) => ({...prev, identifierInput: value}))}
+                        onChange    : (value) => {
+                            setLoginForm((prev) => ({...prev, identifierInput: value}))
+                        }
                     },
                     {
                         id                 : "password",
                         placeholder        : "Password",
                         value              : loginForm.passwordInput,
-                        onChange           : (value) => {setLoginForm((prev) => ({...prev, passwordInput: value}))},
+                        onChange           : (value) => {
+                            setLoginForm((prev) => ({...prev, passwordInput: value}))
+                        },
                         isPassword         : true,
                         visible            : isVisible,
                         setPasswordVisible : setIsVisible

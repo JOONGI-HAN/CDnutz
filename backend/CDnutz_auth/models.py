@@ -22,10 +22,10 @@ class CustomUser(AbstractUser):
         # since I allow users to login via both username and email, it is important to disallow usernames to be in email formats
         # test case userA = {username = "john", email = "john@example.com"} | userB = {username = "john@example.com", email = bob@example.com}
         # then backends.CustomAuthenticationBackend's model filter would return both of them, and .first() would pick the first instance [NOT SAFE]
-        if "@" in self.username:
+        if "@" in self.username or " " in self.username:
             raise ValidationError(
                 {
-                    "username" : "Username cannot contain '@' symbol"
+                    "username" : "Username cannot contain '@' symbol or an empty space."
                 }
             )
 

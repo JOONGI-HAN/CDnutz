@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import SearchResults from "./searchResults";
 
 function InputField({value, onChange, expanded, onExpand, results, loading, icon:Icon, browsingMode = false,
-    placeholder = "Search...", collapsible = false, showIcon = true, basic = true, type = "text", name
+    placeholder = "Search...", collapsible = false, showIcon = true, basic = true, type = "text", name, error = false
 }) {
     const [showDropdown, setShowDropdown] = useState(false);
     const containerRef = useRef(null);
@@ -46,7 +46,7 @@ function InputField({value, onChange, expanded, onExpand, results, loading, icon
                     name        = {name || "search--bar"}
                     className   = {`w-full bg-[var(--interractive-background)] text-white
                                    ${showIcon ? "pl-8" : "pl-4"} pr-4 py-2 text-[13px] font-semibold rounded-full
-                                   border border-[var(--border)]
+                                   border ${error ? "border-[var(--color-destructive)]" : "border-[var(--border)]"}
                                    placeholder:text-[var(--color-primary)]
                                    outline-none`}
                     autoComplete = "off"

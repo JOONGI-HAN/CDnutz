@@ -13,35 +13,52 @@ const GoogleIcon = (props) => (
     </svg>
 );
 
-function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loading = false, error = false, showSocial = true, compact = false }) {
+function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loading = false,
+                    error = false, showSocial = true, compact = false }) {
 
     const renderField = (field) => (
-        <div key = {field.id} className = "relative w-full">
-            <InputField
-                value       = {field.value}
-                onChange    = {field.onChange}
-                icon        = {field.icon}
-                showIcon    = {!!field.icon}
-                placeholder = {field.placeholder}
-                name        = {field.id}
-                type        = {field.isPassword ? (field.visible ? "text" : "password") : field.type}
-                basic       = {true}
-            />
-            {field.isPassword && (
-                <ActionButton
-                    type      = "button"
-                    icon      = {field.visible ? EyeOff : Eye}
-                    onClick   = {field.setPasswordVisible}
-                    className = "group absolute right-3 top-1/2 -translate-y-1/2 p-0 bg-transparent border-0 cursor-pointer"
+        <div key = {field.id} className = "w-full">
+            <div className = "relative w-full">
+                <InputField
+                    value       = {field.value}
+                    onChange    = {field.onChange}
+                    icon        = {field.icon}
+                    showIcon    = {!!field.icon}
+                    placeholder = {field.placeholder}
+                    name        = {field.id}
+                    type        = {field.isPassword ? (field.visible ? "text" : "password") : field.type}
+                    basic       = {true}
+                    error       = {!!field.error}
                 />
+                {field.isPassword && (
+                    <ActionButton
+                        type      = "button"
+                        icon      = {field.visible ? EyeOff : Eye}
+                        onClick   = {field.setPasswordVisible}
+                        className = "group absolute right-3 top-1/2 -translate-y-1/2 p-0 bg-transparent border-0 cursor-pointer"
+                    />
+                )}
+            </div>
+
+            {field.error && (
+              <span className = "block text-left text-[var(--color-destructive)] text-xs mt-1.5">
+                {field.error}
+              </span>
             )}
         </div>
+    );
+
+    {/* use this to check if any field has a validation error to use this to disable the submission button visually */}
+    const isValidationError = fields.some(field =>
+        Array.isArray(field)
+            ? field.some(f => !!f.error)
+            : !!field.error
     );
 
     return (
         <form noValidate
             onSubmit  = {onSubmit}
-            className = {`flex flex-col items-center w-full h-full text-center ${compact ? "pt-4 md:pt-9" : "pt-5 md:pt-10"}`}
+            className = {`flex flex-col items-center w-full h-full text-center ${compact ? "pt-4 md:pt-9" : ""}`}
         >
             <div className = {`w-full max-w-[340px] ${compact ? "mb-5" : "mb-6"}`}>
                 <h1 className = "text-[32px] font-semibold tracking-tight leading-[1.15] mb-2
@@ -55,7 +72,7 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loadi
                 )}
             </div>
 
-            <div className = {`flex flex-col w-full max-w-[320px] ${compact ? "gap-3.5" : "gap-4"}`}>
+            <div className = {`flex flex-col w-full max-w-[340px] ${compact ? "gap-4" : "gap-3.5"}`}>
                 {fields.map((item, idx) =>
                     Array.isArray(item) ? (
                         <div key = {`row-${idx}`} className = "flex gap-2 w-full">
@@ -67,19 +84,19 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loadi
                 )}
             </div>
 
-            {extra && <div className = "w-full max-w-[320px] mt-3">{extra}</div>}
+            {extra && <div className = "w-full max-w-[340px] mt-3">{extra}</div>}
 
             {error && (
-                <p className = "text-[12px] font-medium text-[var(--color-destructive)] mt-3 max-w-[320px]">
+                <p className = "text-[12px] font-medium text-[var(--color-destructive)] mt-3 max-w-[380px]">
                     {typeof error === "string" ? error : "Something went wrong. Please try again."}
                 </p>
             )}
 
-            <div className = {`relative w-full max-w-[320px] ${compact ? "mt-5" : "mt-6"}`}>
+            <div className = {`relative w-full max-w-[340px] ${compact ? "mt-5" : "mt-6"}`}>
                 <ActionButton
                     type = "submit"
                     label = {loading ? <Spinner size = {20} color = "#fff" /> : submitLabel}
-                    disable = {loading}
+                    disable = {loading || isValidationError}
                     className = {`w-full flex items-center justify-center rounded-full py-3 bg-[image:var(--accent-color)]
                                 text-white text-sm font-semibold tracking-wide transition-all hover:brightness-110 focus-visible:outline
                                 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-bright)]
@@ -90,7 +107,7 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loadi
             </div>
 
             {showSocial && (
-                <div className = {`w-full max-w-[320px] flex flex-col items-center ${compact ? "mt-5" : "mt-6"}`}>
+                <div className = {`w-full max-w-[340px] flex flex-col items-center ${compact ? "mt-5" : "mt-6"}`}>
                     <div className = "flex items-center gap-3 w-full mb-4">
                         <span className = "flex-1 h-px bg-[var(--border)]" />
                         <span className = "text-[11px] font-medium uppercase tracking-[2px] text-[var(--color-muted)]">
