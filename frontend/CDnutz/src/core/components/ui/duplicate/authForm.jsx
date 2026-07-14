@@ -13,7 +13,7 @@ const GoogleIcon = (props) => (
     </svg>
 );
 
-function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, setPasswordVisible, loading = false, error = false, showSocial = true, compact = false }) {
+function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loading = false, error = false, showSocial = true, compact = false }) {
 
     const renderField = (field) => (
         <div key = {field.id} className = "relative w-full">
@@ -39,13 +39,13 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, setPa
     );
 
     return (
-        <form
+        <form noValidate
             onSubmit  = {onSubmit}
             className = {`flex flex-col items-center w-full h-full text-center ${compact ? "pt-4 md:pt-9" : "pt-5 md:pt-10"}`}
         >
             <div className = {`w-full max-w-[340px] ${compact ? "mb-5" : "mb-6"}`}>
                 <h1 className = "text-[32px] font-semibold tracking-tight leading-[1.15] mb-2
-                                  bg-gradient-to-br from-white via-[#EDE4FF] to-[#C9A9FF] bg-clip-text text-transparent">
+                                  bg-gradient-to-br from-white via-[var(--auth-heading-gradient-mid)] to-[var(--auth-heading-gradient-end)] bg-clip-text text-transparent">
                     {title}
                 </h1>
                 {subtitle && (
@@ -83,7 +83,7 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, setPa
                     className = {`w-full flex items-center justify-center rounded-full py-3 bg-[image:var(--accent-color)]
                                 text-white text-sm font-semibold tracking-wide transition-all hover:brightness-110 focus-visible:outline
                                 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-bright)]
-                                shadow-[0_10px_30px_-8px_rgba(168,85,247,0.55)] hover:shadow-[0_14px_34px_-8px_rgba(168,85,247,0.7)]
+                                shadow-[0_10px_30px_-8px_var(--shadow-accent-glow)] hover:shadow-[0_14px_34px_-8px_var(--shadow-accent-glow-hover)]
                                 hover:-translate-y-[1px] active:translate-y-0
                                 ${loading ? "cursor-wait opacity-90" : "cursor-pointer"}`}
                 />
@@ -104,9 +104,9 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, setPa
                         icon      = {GoogleIcon}
                         label     = "Continue with Google"
                         className = "w-full flex items-center justify-center gap-2.5 rounded-full py-2.5
-                                     bg-white/[0.04] text-[13px] font-medium text-[var(--color-text-soft)]
-                                     shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_2px_10px_-2px_rgba(0,0,0,0.35)]
-                                     hover:bg-white/[0.07] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.14),0_4px_16px_-2px_rgba(0,0,0,0.4)]
+                                     bg-[var(--surface-meta-row)] text-[13px] font-medium text-[var(--color-text-soft)]
+                                     shadow-[0_0_0_1px_var(--auth-social-btn-ring),0_2px_10px_-2px_var(--auth-social-btn-shadow)]
+                                     hover:bg-[var(--auth-social-btn-bg-hover)] hover:shadow-[0_0_0_1px_var(--auth-social-btn-ring-hover),0_4px_16px_-2px_var(--auth-social-btn-shadow-hover)]
                                      transition-all cursor-pointer"
                     />
                 </div>

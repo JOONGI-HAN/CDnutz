@@ -6,8 +6,13 @@ import AuthForm from "./ui/duplicate/authForm";
 import useRevealPassword from "../hooks/useRevealPassword";
 
 export default function Login({ showMobileToggle }) {
-    const [identifierInput, setIdentifierInput] = useState("");
-    const [passwordInput, setPasswordInput] = useState("");
+    const [loginForm, setLoginForm] = useState(
+        {
+            identifierInput : "",
+            passwordInput   : "",
+        }
+    )
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
 
@@ -26,8 +31,8 @@ export default function Login({ showMobileToggle }) {
                         headers : {"Content-Type" : "application/json"},
                         body    : JSON.stringify(
                             {
-                                identifier : identifierInput,
-                                password   : passwordInput
+                                identifier : loginForm.identifierInput,
+                                password   : loginForm.passwordInput
                             }
                         )
                     }
@@ -59,8 +64,22 @@ export default function Login({ showMobileToggle }) {
                 title   = "Sign In"
                 compact = {true}
                 fields  = {[
-                    { id: "identifier", type: "email", placeholder: "xyz@example.com", value: identifierInput, onChange: setIdentifierInput },
-                    { id: "password", placeholder: "Password", value: passwordInput, onChange: setPasswordInput, isPassword: true, visible: isVisible, setPasswordVisible: setIsVisible },
+                    {
+                        id          : "identifier",
+                        type        : "email",
+                        placeholder : "xyz@example.com",
+                        value       : loginForm.identifierInput,
+                        onChange    : (value) => {setLoginForm((prev) => ({...prev, identifierInput: value}))}
+                    },
+                    {
+                        id                 : "password",
+                        placeholder        : "Password",
+                        value              : loginForm.passwordInput,
+                        onChange           : (value) => {setLoginForm((prev) => ({...prev, passwordInput: value}))},
+                        isPassword         : true,
+                        visible            : isVisible,
+                        setPasswordVisible : setIsVisible
+                    },
                 ]}
                 extra = {
                     <div className = "flex items-center justify-between w-full text-[12.5px] font-medium text-[var(--color-subtle)]">

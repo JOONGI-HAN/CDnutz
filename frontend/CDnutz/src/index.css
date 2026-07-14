@@ -125,6 +125,24 @@
 
   /* Sidebar */
   --color-nav-active-shadow      : #A855F733; /* purple-500/20 — active item     */ --background    : oklch(1 0 0); --foreground    : oklch(0.145 0 0); --card    : oklch(1 0 0); --card-foreground    : oklch(0.145 0 0); --popover    : oklch(1 0 0); --popover-foreground    : oklch(0.145 0 0); --primary    : oklch(0.205 0 0); --primary-foreground    : oklch(0.985 0 0); --secondary    : oklch(0.97 0 0); --secondary-foreground    : oklch(0.205 0 0); --muted    : oklch(0.97 0 0); --muted-foreground    : oklch(0.556 0 0); --accent    : oklch(0.97 0 0); --accent-foreground    : oklch(0.205 0 0); --destructive    : oklch(0.577 0.245 27.325); --input    : oklch(0.922 0 0); --ring    : oklch(0.708 0 0); --chart-1    : oklch(0.87 0 0); --chart-2    : oklch(0.556 0 0); --chart-3    : oklch(0.439 0 0); --chart-4    : oklch(0.371 0 0); --chart-5    : oklch(0.269 0 0); --radius    : 0.625rem; --sidebar    : oklch(0.985 0 0); --sidebar-foreground    : oklch(0.145 0 0); --sidebar-primary    : oklch(0.205 0 0); --sidebar-primary-foreground    : oklch(0.985 0 0); --sidebar-accent    : oklch(0.97 0 0); --sidebar-accent-foreground    : oklch(0.205 0 0); --sidebar-border    : oklch(0.922 0 0); --sidebar-ring    : oklch(0.708 0 0);
+
+  /* Auth screen */
+  --shadow-card-ring              : #FFFFFF12; /* white/7  — auth card outer hairline */
+  --shadow-card-glow              : #7E22CE80; /* purple/50 — auth card ambient glow */
+  --shadow-card-depth             : #000000A6; /* black/65 — auth card drop shadow */
+  --shadow-accent-glow            : #A855F78C; /* accent/55 — submit button glow */
+  --shadow-accent-glow-hover      : #A855F7B3; /* accent/70 — submit button glow, hover */
+  --auth-card-shade               : #00000026; /* black/15 — card gradient shade */
+  --auth-heading-gradient-mid     : #EDE4FF;   /* heading gradient mid stop */
+  --auth-heading-gradient-end     : #C9A9FF;   /* heading gradient end stop */
+  --auth-photo-overlay-start      : #000000CC; /* black/80 — photo panel overlay start */
+  --auth-photo-overlay-mid        : #00000059; /* black/35 — photo panel overlay mid */
+  --auth-subtext                  : #FFFFFFCC; /* white/80 — text over photo panels */
+  --auth-social-btn-bg-hover      : #FFFFFF12; /* white/7  — social button fill, hover */
+  --auth-social-btn-ring          : #FFFFFF14; /* white/8  — social button ring */
+  --auth-social-btn-ring-hover    : #FFFFFF24; /* white/14 — social button ring, hover */
+  --auth-social-btn-shadow        : #00000059; /* black/35 — social button drop shadow */
+  --auth-social-btn-shadow-hover  : #00000066; /* black/40 — social button drop shadow, hover */
 }
 
 .light {

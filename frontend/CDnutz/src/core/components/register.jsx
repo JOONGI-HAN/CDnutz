@@ -6,11 +6,15 @@ import AuthForm from "./ui/duplicate/authForm";
 import useRevealPassword from "../hooks/useRevealPassword";
 
 export default function Register({ showMobileToggle, mobile }) {
-    const [firstNameInput, setFirstNameInput] = useState("");
-    const [lastNameInput, setLastNameInput] = useState("");
-    const [emailInput, setEmailInput] = useState("");
-    const [passwordInput, setPasswordInput] = useState("");
-    const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
+    const [registerForm, setRegisterForm] = useState(
+        {
+            firstNameInput       : "",
+            lastNameInput        : "",
+            emailInput           : "",
+            passwordInput        : "",
+            confirmPasswordInput : "",
+        }
+    )
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
@@ -25,12 +29,46 @@ export default function Register({ showMobileToggle, mobile }) {
                 title  = "Create Account"
                 fields = {[
                     [
-                        { id: "firstName", type: "text", placeholder: "First name", value: firstNameInput, onChange: setFirstNameInput },
-                        { id: "lastName", type: "text", placeholder: "Last name", value: lastNameInput, onChange: setLastNameInput }
+                        {
+                            id          : "firstName",
+                            type        : "text",
+                            placeholder : "First name",
+                            value       : registerForm.firstNameInput,
+                            onChange    : (value) => {setRegisterForm((prev) => ({...prev, firstNameInput: value}))}
+                        },
+                        {
+                            id          : "lastName",
+                            type        : "text",
+                            placeholder : "Last name",
+                            value       : registerForm.lastNameInput,
+                            onChange    : (value) => {setRegisterForm((prev) => ({...prev, lastNameInput: value}))}
+                        }
                     ],
-                    { id: "email", type: "email", placeholder: "xyz@example.com", value: emailInput, onChange: setEmailInput },
-                    { id: "password", placeholder: "Password", value: passwordInput, onChange: setPasswordInput, isPassword: true, visible: isPasswordVisible, setPasswordVisible: setIsPasswordVisible },
-                    { id: "confirmPassword", placeholder: "Confirm password", value: confirmPasswordInput, onChange: setConfirmPasswordInput, isPassword: true, visible: isConfirmPasswordVisible, setPasswordVisible: setIsConfirmPasswordVisible },
+                    {
+                        id          : "email",
+                        type        : "email",
+                        placeholder : "xyz@example.com",
+                        value       : registerForm.emailInput,
+                        onChange    : (value) => {setRegisterForm((prev) => ({...prev, emailInput: value}))}
+                    },
+                    {
+                        id                 : "password",
+                        placeholder        : "Password",
+                        value              : registerForm.passwordInput,
+                        onChange           : (value) => {setRegisterForm((prev) => ({...prev, passwordInput: value}))},
+                        isPassword         : true,
+                        visible            : isPasswordVisible,
+                        setPasswordVisible : setIsPasswordVisible
+                    },
+                    {
+                        id                 : "confirmPassword",
+                        placeholder        : "Confirm password",
+                        value              : registerForm.confirmPasswordInput,
+                        onChange           : (value) => {setRegisterForm((prev) => ({...prev, confirmPasswordInput: value}))},
+                        isPassword         : true,
+                        visible            : isConfirmPasswordVisible,
+                        setPasswordVisible : setIsConfirmPasswordVisible
+                    },
                 ]}
                 submitLabel = "Register"
                 loading = {loading}

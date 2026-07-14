@@ -37,12 +37,12 @@ export default function Authenticate() {
             {/* Main Card Container */}
                 <div className = "relative z-10 w-full rounded-[28px] overflow-hidden
                                    bg-[var(--secondary-background)]
-                                   shadow-[0_0_0_1px_rgba(255,255,255,0.07),0_25px_70px_-15px_rgba(126,34,206,0.5),0_15px_35px_-10px_rgba(0,0,0,0.65)]
+                                   shadow-[0_0_0_1px_var(--shadow-card-ring),0_25px_70px_-15px_var(--shadow-card-glow),0_15px_35px_-10px_var(--shadow-card-depth)]
                                    max-w-[420px] pb-8 pt-3
                                    md:max-w-[1024px] md:min-h-[580px] md:pb-0 md:pt-0"
                 >
 
-                    <div className = "absolute inset-0 bg-gradient-to-b from-white/[0.05] via-transparent to-black/[0.15] pointer-events-none" />
+                    <div className = "absolute inset-0 bg-gradient-to-b from-[var(--surface-card)] via-transparent to-[var(--auth-card-shade)] pointer-events-none" />
 
                     {/* Mobile Layout (below md breakpoint) */}
                     {isMobileLayout ? (
@@ -90,20 +90,20 @@ export default function Authenticate() {
                                     {/* Login Prompt Side (Left half of inner strip) */}
                                     <div className = "absolute top-0 left-0 w-1/2 h-full flex flex-col items-center justify-center text-center px-10">
                                         <div className = "absolute inset-0 bg-cover bg-center" style = {{ backgroundImage: `url(${purpleMoon})` }} />
-                                        <div className = "absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
+                                        <div className = "absolute inset-0 bg-gradient-to-t from-[var(--auth-photo-overlay-start)] via-[var(--auth-photo-overlay-mid)] to-transparent" />
                                         <div className = "relative z-10">
                                             <h1 className = "text-[36px] font-semibold tracking-tight leading-[1.15] mb-4
-                                                              bg-gradient-to-br from-white via-[#EDE4FF] to-[#C9A9FF] bg-clip-text text-transparent">
+                                                              bg-gradient-to-br from-white via-[var(--auth-heading-gradient-mid)] to-[var(--auth-heading-gradient-end)] bg-clip-text text-transparent">
                                                 Welcome back
                                             </h1>
-                                            <p className = "text-[14px] font-normal text-white/80 leading-relaxed mb-7 max-w-[240px] mx-auto">
+                                            <p className = "text-[14px] font-normal text-[var(--auth-subtext)] leading-relaxed mb-7 max-w-[240px] mx-auto">
                                                 Already have an account? Sign in to pick up right where you left off.
                                             </p>
                                             <NavLink
                                                 to = "/authenticate/login"
                                                 className = {({ isActive }) => `inline-block border-2 border-white rounded-full
                                                                                                 px-9 py-3 text-[12px] font-medium uppercase tracking-[1.5px] transition-colors
-                                                                                                ${isActive ? "bg-white/20" : "hover:bg-white/10"}`}
+                                                                                                ${isActive ? "bg-[var(--surface-card-border-hover)]" : "hover:bg-[var(--surface-card-hover)]"}`}
                                             >
                                                 Sign In
                                             </NavLink>
@@ -113,20 +113,20 @@ export default function Authenticate() {
                                     {/* Register Prompt Side (Right half of inner strip) */}
                                     <div className = "absolute top-0 right-0 w-1/2 h-full flex flex-col items-center justify-center text-center px-10">
                                         <div className = "absolute inset-0 bg-cover bg-center" style = {{ backgroundImage: `url(${fallingAstronaut})` }} />
-                                        <div className = "absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
+                                        <div className = "absolute inset-0 bg-gradient-to-t from-[var(--auth-photo-overlay-start)] via-[var(--auth-photo-overlay-mid)] to-transparent" />
                                         <div className = "relative z-10">
                                             <h1 className = "text-[36px] font-semibold tracking-tight leading-[1.15] mb-4
-                                                              bg-gradient-to-br from-white via-[#EDE4FF] to-[#C9A9FF] bg-clip-text text-transparent">
+                                                              bg-gradient-to-br from-white via-[var(--auth-heading-gradient-mid)] to-[var(--auth-heading-gradient-end)] bg-clip-text text-transparent">
                                                 Hello there
                                             </h1>
-                                            <p className  = "text-[14px] font-normal text-white/80 leading-relaxed mb-7 max-w-[240px] mx-auto">
+                                            <p className  = "text-[14px] font-normal text-[var(--auth-subtext)] leading-relaxed mb-7 max-w-[240px] mx-auto">
                                                 Don't have an account yet? Join us and start your journey today.
                                             </p>
                                             <NavLink
                                                 to = "/authenticate/register"
                                                 className = {({ isActive }) => `inline-block border-2 border-white rounded-full
                                                                                                 px-9 py-3 text-[12px] font-medium uppercase tracking-[1.5px] transition-colors
-                                                                                                ${isActive ? "bg-white/20" : "hover:bg-white/10"}`}
+                                                                                                ${isActive ? "bg-[var(--surface-card-border-hover)]" : "hover:bg-[var(--surface-card-hover)]"}`}
                                             >
                                                 Sign Up
                                             </NavLink>
