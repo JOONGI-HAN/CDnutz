@@ -3,11 +3,15 @@ import {NavLink} from "react-router-dom";
 
 import AuthForm from "./ui/duplicate/authForm";
 
+import useRevealPassword from "../hooks/useRevealPassword";
+
 export default function Login({ showMobileToggle }) {
     const [identifierInput, setIdentifierInput] = useState("");
     const [passwordInput, setPasswordInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
+
+    const {isVisible, setIsVisible} = useRevealPassword()
 
     const authenticateUser = async (e) => {
         e.preventDefault();
@@ -56,7 +60,7 @@ export default function Login({ showMobileToggle }) {
                 compact = {true}
                 fields  = {[
                     { id: "identifier", type: "email", placeholder: "xyz@example.com", value: identifierInput, onChange: setIdentifierInput },
-                    { id: "password", type: "password", placeholder: "Password", value: passwordInput, onChange: setPasswordInput },
+                    { id: "password", placeholder: "Password", value: passwordInput, onChange: setPasswordInput, isPassword: true, visible: isVisible, setPasswordVisible: setIsVisible },
                 ]}
                 extra = {
                     <div className = "flex items-center justify-between w-full text-[12.5px] font-medium text-[var(--color-subtle)]">

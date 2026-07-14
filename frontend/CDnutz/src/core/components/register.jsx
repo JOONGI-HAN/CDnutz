@@ -3,6 +3,8 @@ import {NavLink} from "react-router-dom";
 
 import AuthForm from "./ui/duplicate/authForm";
 
+import useRevealPassword from "../hooks/useRevealPassword";
+
 export default function Register({ showMobileToggle, mobile }) {
     const [firstNameInput, setFirstNameInput] = useState("");
     const [lastNameInput, setLastNameInput] = useState("");
@@ -12,6 +14,9 @@ export default function Register({ showMobileToggle, mobile }) {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
+
+    const {isVisible:isPasswordVisible, setIsVisible:setIsPasswordVisible} = useRevealPassword();
+    const {isVisible:isConfirmPasswordVisible, setIsVisible:setIsConfirmPasswordVisible} = useRevealPassword();
 
 
     return (
@@ -24,8 +29,8 @@ export default function Register({ showMobileToggle, mobile }) {
                         { id: "lastName", type: "text", placeholder: "Last name", value: lastNameInput, onChange: setLastNameInput }
                     ],
                     { id: "email", type: "email", placeholder: "xyz@example.com", value: emailInput, onChange: setEmailInput },
-                    { id: "password", type: "password", placeholder: "Password", value: passwordInput, onChange: setPasswordInput },
-                    { id: "confirmPassword", type: "password", placeholder: "Confirm password", value: confirmPasswordInput, onChange: setConfirmPasswordInput },
+                    { id: "password", placeholder: "Password", value: passwordInput, onChange: setPasswordInput, isPassword: true, visible: isPasswordVisible, setPasswordVisible: setIsPasswordVisible },
+                    { id: "confirmPassword", placeholder: "Confirm password", value: confirmPasswordInput, onChange: setConfirmPasswordInput, isPassword: true, visible: isConfirmPasswordVisible, setPasswordVisible: setIsConfirmPasswordVisible },
                 ]}
                 submitLabel = "Register"
                 loading = {loading}

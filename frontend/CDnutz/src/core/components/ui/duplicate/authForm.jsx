@@ -1,6 +1,5 @@
-// authForm.jsx
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+
 import InputField from "./inputField";
 import ActionButton from "./actionButton";
 import Spinner from "./spinner";
@@ -14,12 +13,7 @@ const GoogleIcon = (props) => (
     </svg>
 );
 
-function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loading = false, error = false, showSocial = true, compact = false }) {
-    const [revealed, setRevealed] = useState({});
-
-    const toggleReveal = (id) => {
-        setRevealed((prev) => ({ ...prev, [id]: !prev[id] }));
-    };
+function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, setPasswordVisible, loading = false, error = false, showSocial = true, compact = false }) {
 
     const renderField = (field) => (
         <div key = {field.id} className = "relative w-full">
@@ -30,14 +24,14 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loadi
                 showIcon    = {!!field.icon}
                 placeholder = {field.placeholder}
                 name        = {field.id}
-                type        = {field.type === "password" && revealed[field.id] ? "text" : field.type}
+                type        = {field.isPassword ? (field.visible ? "text" : "password") : field.type}
                 basic       = {true}
             />
-            {field.type === "password" && (
+            {field.isPassword && (
                 <ActionButton
                     type      = "button"
-                    icon      = {revealed[field.id] ? EyeOff : Eye}
-                    onClick   = {() => toggleReveal(field.id)}
+                    icon      = {field.visible ? EyeOff : Eye}
+                    onClick   = {field.setPasswordVisible}
                     className = "group absolute right-3 top-1/2 -translate-y-1/2 p-0 bg-transparent border-0 cursor-pointer"
                 />
             )}
@@ -61,7 +55,7 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loadi
                 )}
             </div>
 
-            <div className = {`flex flex-col w-full max-w-[320px] ${compact ? "gap-2.5" : "gap-3"}`}>
+            <div className = {`flex flex-col w-full max-w-[320px] ${compact ? "gap-3.5" : "gap-4"}`}>
                 {fields.map((item, idx) =>
                     Array.isArray(item) ? (
                         <div key = {`row-${idx}`} className = "flex gap-2 w-full">
@@ -84,7 +78,7 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loadi
             <div className = {`relative w-full max-w-[320px] ${compact ? "mt-5" : "mt-6"}`}>
                 <ActionButton
                     type = "submit"
-                    label = {loading ? "" : submitLabel}
+                    label = {loading ? <Spinner size = {20} color = "#fff" /> : submitLabel}
                     disable = {loading}
                     className = {`w-full flex items-center justify-center rounded-full py-3 bg-[image:var(--accent-color)]
                                 text-white text-sm font-semibold tracking-wide transition-all hover:brightness-110 focus-visible:outline
@@ -93,11 +87,6 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loadi
                                 hover:-translate-y-[1px] active:translate-y-0
                                 ${loading ? "cursor-wait opacity-90" : "cursor-pointer"}`}
                 />
-                {loading && (
-                    <div className = "absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <Spinner size = {20} color = "#fff" />
-                    </div>
-                )}
             </div>
 
             {showSocial && (
