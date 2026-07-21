@@ -1,5 +1,5 @@
 import { useState } from "react";
-import {NavLink} from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 import AuthForm from "./duplicate/authForm.jsx";
 
@@ -16,7 +16,7 @@ export default function Register({ showMobileToggle, mobile }) {
                 value: "",
                 error: ""
             },
-            email           : {
+            emailAddress    : {
                 value: "",
                 error: ""
             },
@@ -33,6 +33,71 @@ export default function Register({ showMobileToggle, mobile }) {
 
     const {isVisible:isPasswordVisible, setIsVisible:setIsPasswordVisible} = useRevealPassword();
     const {isVisible:isConfirmPasswordVisible, setIsVisible:setIsConfirmPasswordVisible} = useRevealPassword();
+
+    const [error, setError] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const navigate = useNavigate();
+
+
+    const registerUser = async (e) => {
+        e.preventDefault();
+
+        setLoading(true);
+
+        try {
+            const response = await fetch(
+                "http://localhost:8000/cdnutz/auth/register/",
+                {
+                        method  : "POST",
+                        headers : {"Content-Type" : "application/json"},
+                        body    : JSON.stringify(
+                      {
+                                first_name       : registerForm.firstName,
+                                last_name        : registerForm.lastName,
+                                username         : registerForm.username.value,
+                                email_address    : registerForm.emailAddress.value,
+                                password         : registerForm.password.value,
+                                confirm_password : registerForm.confirmPassword.value
+                            }
+                        )
+                    }
+            )
+
+            if (!response.ok) {
+                setLoading(false);
+                new Error(`HTTP request failed: ${response.status}`)
+            }
+
+            const result = await response.json()
+
+            if (response.status === 200) {
+                navigate("/")
+            } else {
+                setLoading(false)
+
+                if (typeof result == 'object' && result != null && !Array.isArray(result)) {
+                    const updatedRegisterForm = {...registerForm}
+
+                    Object.entries(result).forEach(([key, value]) => {
+                        let snakeToCamel = key.toLowerCase().replace(/_([a-z0-9])/g, (_, char) => char.toUpperCase())
+                        if (snakeToCamel in registerForm) {
+                            updatedRegisterForm[snakeToCamel] = {
+                                ...updatedRegisterForm[snakeToCamel], error : String(value)
+                            }
+                        } else {
+                            setError(true)
+                        }
+                })
+                    setRegisterForm(updatedRegisterForm);
+                }
+            }
+
+        } catch (err) {
+            setLoading(false)
+            setError(err)
+        }
+    }
 
 
     return (
@@ -77,12 +142,12 @@ export default function Register({ showMobileToggle, mobile }) {
                         id          : "email",
                         type        : "email",
                         placeholder : "xyz@example.com",
-                        value       : registerForm.email.value,
-                        error       : registerForm.email.error,
+                        value       : registerForm.emailAddress.value,
+                        error       : registerForm.emailAddress.error,
                         onChange    : (value) => {
                             setRegisterForm((prev) => ({
                                 ...prev,
-                                email: { value, error: emailValidator(value) }
+                                emailAddress: { value, error: emailValidator(value) }
                             }))
                         }
                     },
@@ -118,6 +183,9 @@ export default function Register({ showMobileToggle, mobile }) {
                     },
                 ]}
                 submitLabel = "Register"
+                onSubmit    = {registerUser}
+                loading     = {loading}
+                error       = {error}
             />
             {showMobileToggle && (
                 <NavLink

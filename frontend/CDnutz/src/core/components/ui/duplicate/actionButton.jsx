@@ -1,5 +1,6 @@
+import { Link } from "react-router-dom";
 
-function ActionButton({ className, icon: Icon, label, onClick, type, disable = false }) {
+function ActionButton({ className, icon: Icon, label, onClick, type, disable = false, redirect = null }) {
   return (
     <button
       className = {`${className || `flex items-center gap-3 rounded-lg
@@ -17,7 +18,12 @@ function ActionButton({ className, icon: Icon, label, onClick, type, disable = f
                        transition-colors flex-shrink-0"
         />
       }
-      <span className = "text-sm text-[var(--color-text-soft)] tracking-wide">{label}</span>
+      {
+        redirect ?
+          <Link to = {redirect} className = "text-sm text-[var(--color-text-soft)] tracking-wide">{label}</Link>
+        :
+          <span className = "text-sm text-[var(--color-text-soft)] tracking-wide">{label}</span>
+      }
     </button>
   );
 }

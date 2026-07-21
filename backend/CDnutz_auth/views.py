@@ -1,6 +1,5 @@
-from .models import CustomUser
-
 from .backends import  CustomAuthenticationBackend
+from .serializers import UserRegistrationSerializer
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -16,10 +15,35 @@ def login(request):
     password   = body["password"]
 
     backend = CustomAuthenticationBackend()
-
-    user = backend.authenticate(request = request, username = identifier, password = password)
+    user    = backend.authenticate(request = request, username = identifier, password = password)
 
     if user:
-        return Response({"status" : 200})
+        return Response(
+            {
+                "result" : "User authenticated successfully"
+            },
+            status = 200
+        )
 
-    return Response({"status" : 401, "result" : "Identifier or password is incorrect"})
+    return Response(
+   {
+            "result" : "Identifier or password incorrect"
+        },
+        status = 400
+    )
+
+
+@api_view(["POST"])
+def register(request):
+    body = json.loads(request.body)
+    serializer = UserRegistrationSerializer(data = body)
+
+    serializer.is_valid(raise_exception = True)
+    serializer.save()
+
+    return Response(
+   {
+            'result' : "User successfully created."
+        },
+        status = 200
+    )

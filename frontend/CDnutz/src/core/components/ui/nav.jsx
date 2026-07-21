@@ -97,7 +97,7 @@ function Nav({ toggleMenu }) {
           </div>
 
           <div className = "flex items-center gap-3 flex-shrink-0">
-            <LoginButton className = {loginButtonStyle} label = "LOGIN TO ACCOUNT" />
+            <LoginButton className = {loginButtonStyle} label = "LOGIN TO ACCOUNT" redirect = "authenticate" />
             <Moon className = "text-[var(--color-primary)] cursor-pointer w-5 h-5" />
           </div>
 

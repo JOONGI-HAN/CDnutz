@@ -1,7 +1,7 @@
 import { CircleEllipsis } from 'lucide-react';
 
 import DetailsHero from "./ui/detailsHero";
-import ActionsModal from "./ui/actionsModal";
+import ActionsModal from "./ui/duplicate/actionsModal";
 import Spinner from "./ui/duplicate/spinner";
 
 import { useParams } from "react-router";

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import {NavLink} from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 import AuthForm from "./duplicate/authForm.jsx";
 
@@ -18,6 +18,8 @@ export default function Login({ showMobileToggle }) {
 
     const {isVisible, setIsVisible} = useRevealPassword()
 
+    const navigate = useNavigate();
+
     const authenticateUser = async (e) => {
         e.preventDefault();
 
@@ -25,7 +27,7 @@ export default function Login({ showMobileToggle }) {
 
         try {
             const response = await fetch(
-                "cdnutz/auth/login",
+                "http://localhost:8000/cdnutz/auth/login/",
                 {
                         method  : "POST",
                         headers : {"Content-Type" : "application/json"},
@@ -38,18 +40,17 @@ export default function Login({ showMobileToggle }) {
                     }
             )
 
+            const payload = await response.json()
+
             if (!response.ok) {
                 setLoading(false);
-                new Error(`HTTP request failed: ${response.status}`)
+                setError(payload.result);
+
+                return
             }
 
-            const result = await response.json()
-
-            if (result.status === 200) {
-                ;
-            } else {
-                setLoading(false)
-                setError(result.result)
+            if (response.status === 200) {
+                navigate("/")
             }
 
         } catch (err) {
@@ -59,7 +60,7 @@ export default function Login({ showMobileToggle }) {
     }
 
     return (
-        <div className = "w-full px-4 sm:px-6 flex flex-col h-full">
+        <div className  = "w-full px-4 sm:px-6 flex flex-col h-full">
             <AuthForm
                 title   = "Sign In"
                 compact = {true}

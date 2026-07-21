@@ -98,7 +98,7 @@ function Side({ menuOpen, menuClose }) {
         </nav>
 
         <div className = "md:hidden px-4 self-center">
-          <LoginButton className = {loginButtonStyle} label = "LOGIN TO ACCOUNT" />
+          <LoginButton className = {loginButtonStyle} label = "LOGIN TO ACCOUNT" redirect = "authenticate" />
         </div>
 
       </aside>

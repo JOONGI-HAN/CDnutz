@@ -73,7 +73,9 @@ export default function GuessTheGame() {
         try {
             const gameRes = await fetch(`/cdnutz/api/guess-the-game?difficulty=${difficulty}&dlcs=${dlcs}`);
             if (!gameRes.ok) { setError(`HTTP error ${gameRes.status}`); setLoading(false); return; }
+
             const gameData = await gameRes.json();
+
             setData(gameData);
             setLoading(false);
             setGuessesRemaining(gameData.guesses_left)

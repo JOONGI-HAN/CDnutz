@@ -1,8 +1,8 @@
 import { CircleCheck, Gamepad2, HeartPlus, Pencil, Plus } from 'lucide-react';
 
-import StarRating   from './duplicate/starRating';
-import StatusButton from './duplicate/gamePlayerCount';
-import ActionButton from './duplicate/actionButton.jsx';
+import StarRating   from './starRating.jsx';
+import StatusButton from './gamePlayerCount.jsx';
+import ActionButton from './actionButton.jsx';
 
 function ActionsModal({ open, toggle }) {
   return (
