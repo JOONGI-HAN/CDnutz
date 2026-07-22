@@ -3,32 +3,25 @@ import { Lightbulb, X, RotateCcw } from 'lucide-react';
 import confetti from "../assets/confetti.svg";
 
 import GameCard from './ui/duplicate/gameCard';
-import ActionButton from './ui/duplicate/actionButton.jsx';
-import GuessBar from './ui/duplicate/inputField.jsx';
+import ActionButton from './ui/duplicate/actionButton';
+import GuessBar from './ui/duplicate/inputField';
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams } from 'react-router-dom';
 
 import useDebounce from "../hooks/useDebounce";
+import useRequest from "../hooks/useRequest";
 
 
 export default function GuessTheGame() {
     const [data, setData]                         = useState({});
     const [cover, setCover]         = useState(null);
 
-    const [coverLoading, setCoverLoading] = useState(true);
-    const [loading, setLoading] = useState(true);
-
-    const [error, setError] = useState(null);
-
     const [userGuess, setUserGuess] = useState("");
 
     const [searchParams] = useSearchParams();
     const difficulty = searchParams.get("difficulty");
     const dlcs = searchParams.get("dlcs");
-
-    const [isFetchingHint, setIsFetchingHint] = useState(false);
-    const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
 
     const [totalHints, setTotalHints] = useState(null);
 
@@ -37,6 +30,11 @@ export default function GuessTheGame() {
     const [isWinner, setIsWinner] = useState(false);
 
     const { results, _ } = useDebounce('/cdnutz/api/game/search/', userGuess);
+
+    const { request: fetchGame,   error: gameError,  loading: gameLoading  } = useRequest();
+    const { request: fetchCover,                     loading: coverLoading } = useRequest();
+    const { request: postAnswer,                     loading: answerLoading } = useRequest();
+    const { request: postHint,                       loading: hintLoading  } = useRequest();
 
     const totalGuesses = useRef(null); // we use this to render the circles
     const gameOver = useRef(false);
@@ -56,8 +54,6 @@ export default function GuessTheGame() {
 
 
     const init = () => {
-        setLoading(true);
-        setCoverLoading(true);
         setCover(null);
         setGuessesRemaining(null);
         setTotalHints(null);
@@ -71,32 +67,23 @@ export default function GuessTheGame() {
         init();
 
         try {
-            const gameRes = await fetch(`/cdnutz/api/guess-the-game?difficulty=${difficulty}&dlcs=${dlcs}`);
-            if (!gameRes.ok) { setError(`HTTP error ${gameRes.status}`); setLoading(false); return; }
-
-            const gameData = await gameRes.json();
+            const gameData = await fetchGame(`/cdnutz/api/guess-the-game?difficulty=${difficulty}&dlcs=${dlcs}`);
 
             setData(gameData);
-            setLoading(false);
             setGuessesRemaining(gameData.guesses_left)
             setTotalHints(gameData.hints_left)
 
             totalGuesses.current = gameData.guesses_left
 
         } catch {
-            setLoading(false);
-            setError(true)
             return; // no need to fetch cover if game failed to return
         }
 
         try {
-            const coverRes  = await fetch('/cdnutz/api/guess-the-game/cover');
-            const coverData = await coverRes.json();
+            const coverData = await fetchCover('/cdnutz/api/guess-the-game/cover');
             if (coverData.cover) setCover(coverData.cover);
         } catch (e) {
             console.error("Cover fetch failed", e);
-        } finally {
-            setCoverLoading(false);
         }
     }
 
@@ -109,44 +96,44 @@ export default function GuessTheGame() {
     async function submitAnswer(e) {
         e.preventDefault();
 
-        if (isSubmittingAnswer || gameOver.current) return
+        if (answerLoading || gameOver.current) return
 
-        setIsSubmittingAnswer(true);
-        const response = await fetch(
-            '/cdnutz/api/guess-the-game/',
-            {
-                    method  : "POST",
-                    headers : {"Content-Type" : "application/json"},
-                    body    : JSON.stringify({guess : userGuess})
-                }
-        )
+        try {
+            const result = await postAnswer(
+                '/cdnutz/api/guess-the-game/',
+                {
+                        method  : "POST",
+                        headers : {"Content-Type" : "application/json"},
+                        body    : {guess : userGuess}
+                    }
+            )
 
-        const result = await response.json();
+            {/* Game Over; win || lose => reveal full metadata and full cover */}
+            if (result.over === true) {
+                 setData(result.payload);
+                 setCover(result.payload.cover);
 
-        {/* Game Over; win || lose => reveal full metadata and full cover */}
-        if (result.over === true) {
-             setData(result.payload);
-             setCover(result.payload.cover);
+                 {/* Render the final X wrong guess icon */}
+                 if (result.guesses_left !== undefined) {
+                      setGuessesRemaining(result.guesses_left);
+                 }
 
-             {/* Render the final X wrong guess icon */}
-             if (result.guesses_left !== undefined) {
-                  setGuessesRemaining(result.guesses_left);
-             }
+                 if (result.win === true) {
+                    setIsWinner(true);
+                 }
 
-             if (result.win === true) {
-                setIsWinner(true);
-             }
+                 gameOver.current = true;
+            }
+            else { // user still has guesses left; we just update the cover
+                setGuessesRemaining((prev) => prev - 1);
+                setCover(result.payload);
+            }
 
-             setIsSubmittingAnswer(false);
-             gameOver.current = true;
+            setUserGuess("")
+
+        } catch (e) {
+            console.error("Failed to submit answer", e)
         }
-        else { // user still has guesses left; we just update the cover
-            setGuessesRemaining((prev) => prev - 1);
-            setCover(result.payload);
-            setIsSubmittingAnswer(false);
-        }
-
-        setUserGuess("")
     }
 
     useEffect(() => {
@@ -161,41 +148,34 @@ export default function GuessTheGame() {
     )
 
     async function obtainHint(elem, hintIdx) {
-        if (totalHints <= 0 || isFetchingHint) return
+        if (totalHints <= 0 || hintLoading) return
 
         const path= Array.isArray(elem) ? elem : [elem]
 
-        setIsFetchingHint(true)
-
         try {
-            const response = await fetch(
-            '/cdnutz/api/guess-the-game/',
-            {
-                    method  : "POST",
-                    headers : {"Content-Type" : "application/json"},
-                    body    : JSON.stringify({
-                        category : path,
-                        index    : hintIdx === undefined ? null : hintIdx
-                })
-                }
+            const result = await postHint(
+                '/cdnutz/api/guess-the-game/',
+                {
+                        method  : "POST",
+                        headers : {"Content-Type" : "application/json"},
+                        body    : {
+                            category : path,
+                            index    : hintIdx === undefined ? null : hintIdx
+                        }
+                    }
             )
 
-            const result = await response.json();
+            setData(result.payload);
+            setTotalHints((prev) => prev - 1)
 
-            if (response.ok) {
-                setData(result.payload);
-                setTotalHints((prev) => prev - 1)
-            }
         } catch (e) {
             console.log(`Failed to fetch hint ${e}`)
-        } finally {
-            setIsFetchingHint(false)
         }
 
     }
 
     const handleRandomHint = () => {
-        if (totalHints <= 0 || isFetchingHint || gameOver.current || unrevealedPool.length === 0) return;
+        if (totalHints <= 0 || hintLoading || gameOver.current || unrevealedPool.length === 0) return;
 
         const randomHint = unrevealedPool[Math.floor(Math.random() * unrevealedPool.length)];
 
@@ -240,7 +220,7 @@ export default function GuessTheGame() {
             }
 
             {
-                !loading && !error &&
+                !gameLoading && !gameError &&
                 <>
                     <div className = "flex flex-col items-center gap-6">
 
@@ -272,20 +252,20 @@ export default function GuessTheGame() {
                           onSubmit  = {submitAnswer}>
                         <div className = "w-full xsm:w-[420px]">
                             <GuessBar value = {userGuess} placeholder = {"Guess..."} onChange = {setUserGuess}
-                                      showIcon = {false} results = {results} loading = {loading} basic = {false} />
+                                      showIcon = {false} results = {results} loading = {gameLoading} basic = {false} />
                         </div>
                         <div className = "flex gap-2 justify-center items-center">
                             <div className = "relative flex flex-col items-center">
                                 <ActionButton icon    = {Lightbulb} label={"Random Hint"} type={"button"}
                                               onClick = {handleRandomHint}
-                                              disable = {totalHints <= 0 || isFetchingHint || unrevealedPool.length === 0}/>
+                                              disable = {totalHints <= 0 || hintLoading || unrevealedPool.length === 0}/>
                                 <span
                                     className = "absolute -bottom-5 text-xs uppercase tracking-widest text-[var(--color-text-medium)]">
                                     Hints left: {totalHints}
                                 </span>
                             </div>
 
-                            <ActionButton label = {"Guess"} type = "submit"/>
+                            <ActionButton label = {"Guess"} type = "submit" disable={answerLoading}/>
                         </div>
                     </form>
                 </>

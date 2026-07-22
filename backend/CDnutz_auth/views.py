@@ -4,6 +4,8 @@ from .serializers import UserRegistrationSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from rest_framework_simplejwt.tokens import RefreshToken
+
 import json
 
 
@@ -18,9 +20,16 @@ def login(request):
     user    = backend.authenticate(request = request, username = identifier, password = password)
 
     if user:
+        refresh_token = RefreshToken.for_user(user)
+
         return Response(
-            {
-                "result" : "User authenticated successfully"
+       {
+                "refresh" : str(refresh_token),
+                "access"  : str(refresh_token.access_token),
+                "user"    : {
+                    "id"       : user.id,
+                    "username" : user.username
+                }
             },
             status = 200
         )

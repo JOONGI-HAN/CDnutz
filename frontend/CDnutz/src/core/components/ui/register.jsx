@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
-import AuthForm from "./duplicate/authForm.jsx";
+import AuthForm from "./duplicate/authForm";
 
-import useRevealPassword from "../../hooks/useRevealPassword.jsx";
+import useRevealPassword from "../../hooks/useRevealPassword";
+import useRequest from "../../hooks/useRequest";
 
-import {usernameValidator, emailValidator, passwordValidator, confirmPasswordValidator} from "../../utils/validators.js";
+import {usernameValidator, emailValidator, passwordValidator, confirmPasswordValidator} from "../../utils/validators";
 
 export default function Register({ showMobileToggle, mobile }) {
     const [registerForm, setRegisterForm] = useState(
@@ -33,9 +34,7 @@ export default function Register({ showMobileToggle, mobile }) {
 
     const {isVisible:isPasswordVisible, setIsVisible:setIsPasswordVisible} = useRevealPassword();
     const {isVisible:isConfirmPasswordVisible, setIsVisible:setIsConfirmPasswordVisible} = useRevealPassword();
-
-    const [error, setError] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const {request, error, errSetter, loading} = useRequest();
 
     const navigate = useNavigate();
 
@@ -43,16 +42,14 @@ export default function Register({ showMobileToggle, mobile }) {
     const registerUser = async (e) => {
         e.preventDefault();
 
-        setLoading(true);
-
         try {
-            const response = await fetch(
+            await request(
                 "http://localhost:8000/cdnutz/auth/register/",
                 {
                         method  : "POST",
                         headers : {"Content-Type" : "application/json"},
-                        body    : JSON.stringify(
-                      {
+                        body    :
+                            {
                                 first_name       : registerForm.firstName,
                                 last_name        : registerForm.lastName,
                                 username         : registerForm.username.value,
@@ -60,42 +57,31 @@ export default function Register({ showMobileToggle, mobile }) {
                                 password         : registerForm.password.value,
                                 confirm_password : registerForm.confirmPassword.value
                             }
-                        )
-                    }
+
+                        }
             )
 
-            if (!response.ok) {
-                setLoading(false);
-                new Error(`HTTP request failed: ${response.status}`)
-            }
-
-            const result = await response.json()
-
-            if (response.status === 200) {
-                navigate("/")
-            } else {
-                setLoading(false)
-
-                if (typeof result == 'object' && result != null && !Array.isArray(result)) {
-                    const updatedRegisterForm = {...registerForm}
-
-                    Object.entries(result).forEach(([key, value]) => {
-                        let snakeToCamel = key.toLowerCase().replace(/_([a-z0-9])/g, (_, char) => char.toUpperCase())
-                        if (snakeToCamel in registerForm) {
-                            updatedRegisterForm[snakeToCamel] = {
-                                ...updatedRegisterForm[snakeToCamel], error : String(value)
-                            }
-                        } else {
-                            setError(true)
-                        }
-                })
-                    setRegisterForm(updatedRegisterForm);
-                }
-            }
+            navigate("/")
 
         } catch (err) {
-            setLoading(false)
-            setError(err)
+            console.log(err.data)
+            if (typeof err.data == 'object' && err.data != null && !Array.isArray(err.data)) {
+                errSetter(null)
+
+                const updatedRegisterForm = {...registerForm}
+
+                Object.entries(err.data).forEach(([key, value]) => {
+                    let snakeToCamel = key.toLowerCase().replace(/_([a-z0-9])/g, (_, char) => char.toUpperCase())
+                    if (snakeToCamel in registerForm) {
+                        updatedRegisterForm[snakeToCamel] = {
+                            ...updatedRegisterForm[snakeToCamel], error : String(value)
+                        }
+                    } else {
+                        errSetter(err.data)
+                    }
+                })
+                setRegisterForm(updatedRegisterForm);
+            }
         }
     }
 

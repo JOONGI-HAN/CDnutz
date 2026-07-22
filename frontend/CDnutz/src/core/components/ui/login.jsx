@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
-import AuthForm from "./duplicate/authForm.jsx";
+import AuthForm from "./duplicate/authForm";
 
-import useRevealPassword from "../../hooks/useRevealPassword.jsx";
+import useRevealPassword from "../../hooks/useRevealPassword";
+import useRequest from "../../hooks/useRequest";
 
 export default function Login({ showMobileToggle }) {
     const [loginForm, setLoginForm] = useState(
@@ -13,49 +14,39 @@ export default function Login({ showMobileToggle }) {
         }
     )
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(false);
-
     const {isVisible, setIsVisible} = useRevealPassword()
+    const {request, error, loading} = useRequest();
 
     const navigate = useNavigate();
 
     const authenticateUser = async (e) => {
         e.preventDefault();
 
-        setLoading(true);
-
         try {
-            const response = await fetch(
+            const data = await request(
                 "http://localhost:8000/cdnutz/auth/login/",
                 {
-                        method  : "POST",
-                        headers : {"Content-Type" : "application/json"},
-                        body    : JSON.stringify(
-                            {
-                                identifier : loginForm.identifierInput,
-                                password   : loginForm.passwordInput
-                            }
-                        )
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: {
+                        identifier: loginForm.identifierInput,
+                        password: loginForm.passwordInput
                     }
+                }
             )
 
-            const payload = await response.json()
+            localStorage.setItem("JWTauth", JSON.stringify({
+                    "access": data.access,
+                    "refresh": data.refresh,
+                })
+            )
 
-            if (!response.ok) {
-                setLoading(false);
-                setError(payload.result);
-
-                return
-            }
-
-            if (response.status === 200) {
-                navigate("/")
-            }
+            navigate("/")
 
         } catch (err) {
-            setLoading(false)
-            setError(err)
+            console.log(err)
         }
     }
 
@@ -109,7 +100,7 @@ export default function Login({ showMobileToggle }) {
                 onSubmit = {authenticateUser}
                 submitLabel = "Login"
                 loading = {loading}
-                error   = {error}
+                error   = {error?.data}
             />
 
             {showMobileToggle && (

@@ -1,37 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+
+import useRequest from "./useRequest";
 
 export default function useDebounce(url, input, delay = 500) {
-    const [results, setResults] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const { request, data: results, dataSetter, loading } = useRequest();
 
     useEffect(() => {
         {/* Clear results and stop loading if the input is empty */}
         if (!input || input.trim() === "") {
-            setResults(null);
-            setLoading(false);
+            dataSetter(null);
             return;
         }
 
-        async function apiCall() {
-            setLoading(true);
-            try {
-                const response = await fetch(`${url}?q=${input}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP request failed ${response.status}`);
-                }
-
-                const result = await response.json();
-                setResults(result || []);
-
-            } catch (e) {
-                console.log(`request failed ${e}`);
-                setResults([]);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        const search = setTimeout(apiCall, delay);
+        const search = setTimeout(() => {
+            request(`${url}?q=${input}`)
+                .then((result) => {
+                    if (!result) dataSetter([]);
+                })
+                .catch((e) => {
+                    console.log(`request failed ${e}`);
+                    dataSetter([]);
+                });
+        }, delay);
 
         return () => clearTimeout(search);
     }, [input, url, delay]);

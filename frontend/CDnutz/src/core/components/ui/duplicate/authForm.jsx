@@ -88,7 +88,7 @@ function AuthForm({ title, subtitle, fields, extra, onSubmit, submitLabel, loadi
 
             {error && (
                 <p className = "text-[12px] font-medium text-[var(--color-destructive)] mt-3 max-w-[380px]">
-                    {typeof error === "string" ? error : "Something went wrong. Please try again."}
+                    {typeof error === "string" ? error : error?.result ?? "Something went wrong. Please try again."}
                 </p>
             )}
 

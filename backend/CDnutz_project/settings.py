@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -64,6 +65,17 @@ TEMPLATES       = [
 ]
 
 WSGI_APPLICATION        = 'CDnutz_project.wsgi.application'
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME"  : timedelta(minutes = 15),
+    "REFRESH_TOKEN_LIFETIME" : timedelta(days = 7)
+}
 
 DATABASES               = {
     'default': {

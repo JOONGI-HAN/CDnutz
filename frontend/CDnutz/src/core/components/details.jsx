@@ -8,13 +8,12 @@ import { useParams } from "react-router";
 import { useEffect, useState } from "react";
 
 import useWindowSizeListener from "../hooks/useWindowSizeListener";
+import useRequest from "../hooks/useRequest";
 import {Breakpoints} from "../enums.js";
 
 function GameDetails() {
 
-  const [data,        setData]        = useState({});
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState(null);
+  const { request, data, error, loading } = useRequest();
 
   const [modalOpen, setModalOpen]     = useState(false);
 
@@ -22,30 +21,7 @@ function GameDetails() {
 
   useEffect(
     () => {
-
-        async function getGameDetails() {
-          try {
-
-            const response = await fetch(`/cdnutz/api/game/${id}`)
-
-            if (!response.ok) {
-              setError(`HTTP error ${response.status}`);
-              return;
-            }
-
-            const data     = await response.json()
-
-            setData(data)
-
-          } catch (error) {
-            setError(error)
-          } finally {
-            setLoading(false)
-          }
-        }
-
-        getGameDetails()
-
+        request(`/cdnutz/api/game/${id}`).catch(() => {});
     },
     [id]
   )
